@@ -1,0 +1,67 @@
+import os
+import pandas as pd
+import oracledb
+
+class CSVToOracleUploader:
+    def __init__(self, username, password, dsn, csv_dir, client_dir):
+        oracledb.init_oracle_client(lib_dir=client_dir)
+
+        self.username = username
+        self.password = password
+        self.dsn = dsn
+        self.csv_dir = csv_dir
+        self.file_list = [f for f in os.listdir(csv_dir) if f.endswith(".csv")]
+
+    def run(self):
+        try:
+            conn = oracledb.connect(user=self.username, password=self.password, dsn=self.dsn)
+            cursor = conn.cursor()
+            print("🔗 Oracle DB 접속 성공\n")
+
+            for filename in self.file_list:
+                file_path = os.path.join(self.csv_dir, filename)
+                df = pd.read_csv(file_path, encoding="utf-8")
+                
+                # 컬럼명 길이 디버깅
+                print(f"\n📂 [파일] {filename}")
+                print("📋 컬럼명 목록:")
+                for col in df.columns:
+                    print(f" - {col} ({len(col)}자)")
+                for col in df.columns:
+                    byte_len = len(col.encode('utf-8'))
+                    if byte_len > 30:
+                        print(f"⚠️ 컬럼명 '{col}' → 30byte < {byte_len}byte (초과)")
+
+
+                # 테이블명: 번호_데이터_연도.csv → 번호_연도
+                name_parts = filename.split('_')
+                table_name = f"{name_parts[0]}_{name_parts[2]}".upper()
+
+                columns = df.columns.tolist()
+                col_defs = ', '.join([f'"{col}" VARCHAR2(4000)' for col in columns])
+                create_sql = f'CREATE TABLE "{table_name}" ({col_defs})'
+
+                try:
+                    cursor.execute(create_sql)
+                    print(f"🧱 테이블 {table_name} 생성 완료")
+                except oracledb.DatabaseError:
+                    print(f"⚠️ 테이블 {table_name} 이미 존재하거나 생성 실패 → 건너뜀")
+
+                placeholders = ', '.join([f':{i+1}' for i in range(len(columns))])
+                col_names = ', '.join([f'"{col}"' for col in columns])
+                insert_sql = f'INSERT INTO "{table_name}" ({col_names}) VALUES ({placeholders})'
+                data = [tuple(row) for row in df.values]
+
+                try:
+                    cursor.executemany(insert_sql, data)
+                    conn.commit()
+                    print(f"📥 {filename} → {table_name} 테이블에 {len(data)}건 삽입 완료\n")
+                except Exception as e:
+                    print(f"❌ {filename} 삽입 오류: {e}\n")
+
+            cursor.close()
+            conn.close()
+            print("✅ 전체 파일 처리 및 연결 종료")
+
+        except oracledb.DatabaseError as e:
+            print("❌ Oracle 연결 오류: ", e)
