@@ -42,6 +42,7 @@ class CSVToOracleUploader:
                     print(f"🧱 테이블 {table_name} 생성 완료")
                 except oracledb.DatabaseError:
                     print(f"⚠️ 테이블 {table_name} 이미 존재하거나 생성 실패 → 건너뜀")
+                    continue
 
                 placeholders = ', '.join([f':{i+1}' for i in range(len(columns))])
                 col_names = ', '.join([f'"{col}"' for col in columns])

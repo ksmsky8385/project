@@ -1,15 +1,19 @@
 from ExcelToCSVConverter_ver1 import ExcelToCSVConverter_ver1
 from ExcelToCSVConverter_ver2 import ExcelToCSVConverter_ver2
-from CSVToOracleUploader import CSVToOracleUploader
+from CWURCrawler import CWURCrawler
+from EnNameCollector import EnNameCollector
+from NameMapper import NameMapper
+from RankedScoreExporter import RankedScoreExporter
 from HeaderTermCollector import HeaderTermCollector
 from HeaderAbbreviationMapper import HeaderAbbreviationMapper
 from CSVHeaderRenamer import CSVHeaderRenamer
+from CSVToOracleUploader import CSVToOracleUploader
 
 if __name__ == "__main__":
 
-    # 원본 xlsx파일 내 데이터시트 csv 파일로 변환 _ 기본형
+    # 대학도서관 데이터 xlsx파일 csv 파일로 변환 _ 기본형
     def ExcelToCSV_ver1():
-        print("\n🛠️   csv파일 변환 및 저장\n")
+        print("\n🛠️   원본데이터 CSV로 변환_Ver1 시작\n")
         target = [
             ("기본통계_소장및구독자료.xlsx", "Num01_소장및구독자료"),
             ("기본통계_예산및결산.xlsx", "Num03_예산및결산"),
@@ -26,9 +30,9 @@ if __name__ == "__main__":
 
         print('\n📦  모든 파일 변환 완료.\n')
 
-    # 원본 xlsx파일 내 데이터시트 csv 파일로 변환 _ 특이형 파일 전용
+    # 대학도서관 데이터 xlsx파일 csv 파일로 변환 _ 특이형 파일 전용
     def ExcelToCSV_ver2() :
-        print("\n🛠️  헤더 수집 및 저장\n")
+        print("\n🛠️  원본데이터 CSV로 변환_Ver2 시작\n")
         target = [
             ("기본통계_시설.xlsx", "Num02_시설"),
         ]
@@ -42,12 +46,48 @@ if __name__ == "__main__":
             
         print('\n📦  모든 파일 변환 완료.\n')
 
+    # CWUR 사이트에서 상위 한국대학 평가점수 크롤링
+    def Crawling():
+        print("\n🛠️  CWUR사이트 대학평가점수 크롤링 시작\n")
+        folder_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\csv_data"
+        output_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학평가점수크롤링.csv"
+
+        crawler = CWURCrawler(folder_path, output_path)
+        crawler.run()
+
+    # 크롤링 데이터의 영문 대학명 리스트 생성
+    def EnNameList():
+        print("\n🛠️  대학 영문명 리스트화 시작\n")
+        input_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학평가점수크롤링.csv"
+        output_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학영문명리스트.csv"
+
+        extractor = EnNameCollector(input_path, output_path)
+        extractor.run()
+
+    # 영문 대학명 한국명으로 매핑파일 생성
+    def NameMapping():
+        print("\n🛠️  영문명 매핑 시작\n")
+        input_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학영문명리스트.csv"
+        output_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학명매핑표.csv"
+
+        mapper = NameMapper(input_path, output_path)
+        mapper.run()
+        
+    #매핑파일 기반 연도별 대학평가점수 csv파일 생성
+    def ScoreCSVExporter():
+        score_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학평가점수크롤링.csv"
+        mapping_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\대학명매핑표.csv"
+        output_dir = r"D:\workspace\project\KG_AI_Project\resource\csv_files\csv_data"
+
+        exporter = RankedScoreExporter(score_path, mapping_path, output_dir)
+        exporter.run()
+
     # 모든 csv 변환 파일 각각의 컬럼명에 존재하는 헤더 수집
     def HeaderCollellector():
-        print("\n🛠️  헤더 수집 및 저장\n")
+        print("\n🛠️  헤더 수집 시작\n")
         
         csv_dir = r"D:\workspace\project\KG_AI_Project\resource\csv_files\csv_data"
-        save_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\모든헤더목록.csv"
+        save_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\모든헤더목록표.csv"
 
         collector = HeaderTermCollector(csv_dir=csv_dir)
         collector.run()
@@ -55,9 +95,9 @@ if __name__ == "__main__":
 
     # 수집된 헤더명을 영어 약문으로 변환 매칭작업
     def HeaderMapper():
-        print("\n🛠️  헤더 영문변경 및 매핑파일 저장\n")
-        input_header_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\모든헤더목록.csv"
-        output_mapping_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\헤더약어매핑.csv"
+        print("\n🛠️  헤더 매핑 시작\n")
+        input_header_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\모든헤더목록표.csv"
+        output_mapping_path = r"D:\workspace\project\KG_AI_Project\resource\csv_files\헤더약어매핑표.csv"
 
         mapper = HeaderAbbreviationMapper(input_path=input_header_path, output_path=output_mapping_path)
         mapper.run()
@@ -66,13 +106,13 @@ if __name__ == "__main__":
     def HeaderRenamer():
         print("\n🛠️  csv파일 컬럼명 변경 작업 시작\n")
         csv_dir = r"D:\workspace\project\KG_AI_Project\resource\csv_files\csv_data"
-        mapping_csv = r"D:\workspace\project\KG_AI_Project\resource\csv_files\헤더약어매핑.csv"
+        mapping_csv = r"D:\workspace\project\KG_AI_Project\resource\csv_files\헤더약어매핑표.csv"
 
         renamer = CSVHeaderRenamer(csv_folder=csv_dir, mapping_path=mapping_csv)
         renamer.process_all_csvs()
 
     # 모든 csv파일 오라클DB에 테이블로 저장
-    def createDB():
+    def CreateDB():
         print("\n🛠️  Oracl DB 테이블 생성 시작\n")
         username = "libra"
         password = "ksm0923"
@@ -85,11 +125,15 @@ if __name__ == "__main__":
 
         print('\n📦  DB 생성 완료.\n')
 
-
+    # 메서드 실행
 
     ExcelToCSV_ver1()
     ExcelToCSV_ver2()
+    Crawling()
+    EnNameList()
+    NameMapping()
+    ScoreCSVExporter()
     HeaderCollellector()
     HeaderMapper()
     HeaderRenamer()
-    # createDB()
+    CreateDB()

@@ -1,4 +1,4 @@
-﻿Year,ID,SchName,SchType,FoundType,Region,UnivScale,Facility_LibAreaSqm,Facility_ReadSeat_TotSeats,Facility_Equip_StaffPCs,Facility_Equip_UserPCs,Facility_Equip_TotalPCs,AreaPerSt_Area,AreaPerSt_StCountPrev,AreaPerSt_AreaPerSt
+﻿YR,ID,SNM,STYP,FND,RGN,USC,FACLT_LAS,FACLT_RS_TRS,FACLT_EQP_SPC,FACLT_EQP_UPC,FACLT_EQP_TPC,APS_AR,APS_SCP,APS_APS
 2017,1,ICT폴리텍대학,전문대학,사립,경기,C그룹,403,80,1,0,1,403,311,1.2999999523162842
 2017,2,가야대학교,대학,사립,경남,C그룹,3318,830,6,32,38,3318,2718,1.2000000476837158
 2017,3,가천대학교,대학,사립,경기,A그룹,12577,3228,31,117,148,12577,20737,0.6000000238418579
