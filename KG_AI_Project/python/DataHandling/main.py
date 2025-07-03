@@ -127,13 +127,13 @@ if __name__ == "__main__":
 
     # 메서드 실행
 
-    ExcelToCSV_ver1()
-    ExcelToCSV_ver2()
-    Crawling()
-    EnNameList()
-    NameMapping()
-    ScoreCSVExporter()
-    HeaderCollellector()
-    HeaderMapper()
-    HeaderRenamer()
+    # ExcelToCSV_ver1()
+    # ExcelToCSV_ver2()
+    # Crawling()
+    # EnNameList()
+    # NameMapping()
+    # ScoreCSVExporter()
+    # HeaderCollellector()
+    # HeaderMapper()
+    # HeaderRenamer()
     CreateDB()

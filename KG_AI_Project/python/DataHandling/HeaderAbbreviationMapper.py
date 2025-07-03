@@ -176,7 +176,7 @@ class HeaderAbbreviationMapper:
         "전화": "PHN",
         "점수": "SCR",
         "정규직": "FT",
-        "정보화기기(PC)수": "IPC",
+        "정보화기기(PC)수": "TPC",
         "제공": "PRV",
         "종수": "TCNT",
         "준사서": "ALIB",

@@ -30,7 +30,7 @@ class CSVToOracleUploader:
 
 
                 # 테이블명: 번호_데이터_연도.csv → 번호_연도
-                name_parts = filename.split('_')
+                name_parts = filename.replace('.csv', '').split('_')
                 table_name = f"{name_parts[0]}_{name_parts[2]}".upper()
 
                 columns = df.columns.tolist()
