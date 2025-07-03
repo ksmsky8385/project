@@ -1,4 +1,5 @@
 import os
+import csv
 import pandas as pd
 from typing import Set
 
@@ -32,11 +33,14 @@ class HeaderTermCollector:
         if print_summary:
             print(f"✅ 총 {len(self.all_columns)}개 컬럼명 수집")
             print(f"🧩 총 {len(self.all_terms)}개 유니크 토큰 단어 수집\n")
-            for term in sorted(self.all_terms):
-                print(f" - {term}")
+            # for term in sorted(self.all_terms):
+            #     print(f" - {term}")
 
-    def save_terms(self, path="header_terms.txt"):
-        with open(path, "w", encoding="utf-8") as f:
+    def save_terms(self, path):
+        with open(path, "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["한글헤더"])  # 첫 번째 열 이름
             for term in sorted(self.all_terms):
-                f.write(term + "\n")
-        print(f"\n💾 헤더 단어 목록 저장 완료 → {path}")
+                writer.writerow([term])
+        print(f"📂 저장경로 : {path}")
+        print(f"💾 헤더 단어 목록 CSV 저장 완료")

@@ -21,16 +21,12 @@ class CSVToOracleUploader:
             for filename in self.file_list:
                 file_path = os.path.join(self.csv_dir, filename)
                 df = pd.read_csv(file_path, encoding="utf-8")
-                
-                # 컬럼명 길이 디버깅
-                print(f"\n📂 [파일] {filename}")
-                print("📋 컬럼명 목록:")
-                for col in df.columns:
-                    print(f" - {col} ({len(col)}자)")
+
+                # 컬럼명 byte 수 검사 (30 초과만 출력)
                 for col in df.columns:
                     byte_len = len(col.encode('utf-8'))
                     if byte_len > 30:
-                        print(f"⚠️ 컬럼명 '{col}' → 30byte < {byte_len}byte (초과)")
+                        print(f"⚠️ [파일: {filename}] 컬럼명 '{col}' → {byte_len} bytes (30 초과)")
 
 
                 # 테이블명: 번호_데이터_연도.csv → 번호_연도

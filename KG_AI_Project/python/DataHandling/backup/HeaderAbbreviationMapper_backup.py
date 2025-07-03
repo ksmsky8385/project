@@ -1,3 +1,41 @@
+import os
+import csv
+
+class HeaderAbbreviationMapper:
+    def __init__(self, input_path: str, output_path: str):
+        self.input_path = input_path     # 한글 헤더 텍스트 또는 CSV 경로
+        self.output_path = output_path   # 매핑 테이블 저장 경로
+        self.original_headers = set()
+        self.mapping = {}
+
+    def load_headers(self):
+        ext = os.path.splitext(self.input_path)[-1].lower()
+        if ext == ".txt":
+            with open(self.input_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        self.original_headers.add(line)
+        elif ext == ".csv":
+            with open(self.input_path, "r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                if "한글헤더" not in reader.fieldnames:
+                    raise ValueError("CSV 파일에 '한글헤더' 컬럼이 존재하지 않습니다.")
+                for row in reader:
+                    value = row["한글헤더"].strip()
+                    if value:
+                        self.original_headers.add(value)
+
+        else:
+            raise ValueError("지원되지 않는 입력 파일 형식입니다 (.txt 또는 .csv만 가능)")
+
+    def generate_abbreviations(self):
+        for h in sorted(self.original_headers):
+            abbr = self.rule_based_abbreviation(h)
+            self.mapping[h] = abbr
+
+    def rule_based_abbreviation(self, text: str) -> str:
+        replace_dict = {
         "1급 정사서": "SeniorLibrarian1",
         "2012년(A)": "2012A",
         "2013년(A)": "2013A",
@@ -74,8 +112,9 @@
         "미소지자": "NoHolder",
         "방문자수": "VisitorCount",
         "번호": "ID",
-        "봉사대상자수": "VolunteerTargetCount",
+        "봉사대상자수": "VolunteerTC",
         "봉사대상자수 및 이용자수": "VolunteerUserCount",
+        "비대면 실시간 교육": "RemoteEduLive",
         "비대면 이용자 교육": "RemoteEduUsers",
         "비도서자료 구입비": "NonbookCost",
         "비사서": "NonLibrarian",
@@ -158,166 +197,25 @@
         "학교유형": "SchoolType",
         "학부생": "UndergradStudents",
         "합계": "Total"
+        }
+        return replace_dict.get(text, text)
 
+    def save_mapping_csv(self):
+        with open(self.output_path, "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["한글헤더", "영문약어"])
 
-
-        "1급 정사서"
-        "2012년(A)"
-        "2013년(A)"
-        "2013년(B)"
-        "2014년(A)"
-        "2014년(B)"
-        "2014년(C)"
-        "2015년(A)"
-        "2015년(B)"
-        "2015년(C)"
-        "2016년(A)"
-        "2016년(B)"
-        "2016년(C)"
-        "2017년(A)"
-        "2017년(B)"
-        "2017년(C)"
-        "2018년(A)"
-        "2018년(B)"
-        "2018년(C)"
-        "2019년(A)"
-        "2019년(B)"
-        "2019년(C)"
-        "2020년(A)"
-        "2020년(B)"
-        "2020년(C)"
-        "2021년(A)"
-        "2021년(B)"
-        "2021년(C)"
-        "2022년(A)"
-        "2022년(B)"
-        "2022년(C)"
-        "2023년(B)"
-        "2023년(C)"
-        "2024년(C)"
-        "2급 정사서"
-        "[구독] e-Book"
-        "[구독] e-book"
-        "결산"
-        "겸직"
-        "계"
-        "교원"
-        "교육 참가자수"
-        "교육 참여시간"
-        "교육횟수"
-        "구입"
-        "국내"
-        "국내서"
-        "국외"
-        "국외서"
-        "기증"
-        "기타"
-        "기타 전자자료"
-        "당해년도"
-        "대면 이용자 교육"
-        "대면교육"
-        "대출자수"
-        "대출책수"
-        "대출현황"
-        "대학규모"
-        "대학원생"
-        "대학총결산"
-        "대학총결산 대비 도서관 자료구입비 비율"
-        "대학총결산 대비 자료구입비 비율"
-        "대학총예산"
-        "도서관 이용자수"
-        "도서관건물연면적 (제곱미터)"
-        "도서관직원수 비정규직"
-        "도서관직원수 정규직"
-        "도서자료"
-        "도서자료 구입비"
-        "동영상강의자료(e-Learning)"
-        "면담"
-        "미소지자"
-        "방문자수"
-        "번호"
-        "봉사대상자수"
-        "봉사대상자수 및 이용자수"
-        "비대면 실시간 교육"
-        "비대면 이용자 교육"
-        "비도서자료 구입비"
-        "비사서"
-        "비전임교원"
-        "비정규직"
-        "사서"
-        "사서자격증 미소지자"
-        "사서자격증 보유현황"
-        "사서자격증 소지자"
-        "사서직원수 비정규직"
-        "사서직원수 정규직"
-        "상호대차 신청 및 제공 건수"
-        "설립"
-        "설비"
-        "소장도서수"
-        "시설"
-        "신청"
-        "업무용컴퓨터(PC)수"
-        "연간 장서 증가 및 폐기 책수"
-        "연간 장서 증가 종수"
-        "연간 장서 증가 책수"
-        "연간 장서 폐기 책수"
-        "연간장서증가율"
-        "연간장서증가책수"
-        "연도"
-        "연면적"
-        "연속간행물"
-        "연속간행물 구입비"
-        "열람석"
-        "예산"
-        "온라인"
-        "온라인 교육"
-        "원문복사 신청 및 제공 건수"
-        "웹DB"
-        "이용자 교육"
-        "이용자수"
-        "이용자용컴퓨터(PC)수"
-        "자료구입비"
-        "자료구입비(결산)"
-        "자료구입비계"
-        "재학생 1,000명당 도서관 직원수"
-        "재학생 1,000명당 사서 직원수"
-        "재학생 1인당 대출책수"
-        "재학생 1인당 도서관건물 연면적"
-        "재학생 1인당 도서관방문자수"
-        "재학생 1인당 소장도서수"
-        "재학생 1인당 자료구입비"
-        "재학생 1인당 자료구입비(결산)"
-        "재학생수"
-        "재학생수(당해년도)"
-        "재학생수(전년도)"
-        "전년도"
-        "전담"
-        "전임교원"
-        "전자자료"
-        "전자자료 구입비"
-        "전자저널"
-        "전화"
-        "정규직"
-        "정보화기기(PC)수"
-        "제공"
-        "종수"
-        "준사서"
-        "지역"
-        "직원"
-        "직원 1인당 평균 교육 참여 시간"
-        "직원교육현황"
-        "참고서비스 및 상호협력"
-        "참고서비스 신청 및 제공 건수 (2010년 이전)"
-        "참고서비스 제공 건수 (2010년 이후)"
-        "참여시간"
-        "참여인원"
-        "책수"
-        "총 보유컴퓨터(PC)수"
-        "총열람석수"
-        "최근 3년간 자료구입비 증가율(결산)"
-        "패키지"
-        "학과수"
-        "학교명"
-        "학교유형"
-        "학부생"
-        "합계"
+            # ✅ 원본 헤더 순서대로, 정확 일치하는 key만 매핑
+            for original in sorted(self.original_headers):
+                # rule_based_abbreviation을 직접 호출해서 매핑 수행
+                english = self.rule_based_abbreviation(original)
+                writer.writerow([original, english])
+                if original == english:
+                    print(f"⚠️ 매핑 없음: {original}")
+        
+        print(f"✅ 영문 약어 매핑 CSV 저장 완료 → {self.output_path}")
+        
+    def run(self):
+        self.load_headers()
+        self.generate_abbreviations()
+        self.save_mapping_csv()

@@ -55,6 +55,7 @@ class ExcelToCSVConverter_ver1:
         return sum(1 for cell in ws[row_idx] if cell.value not in (None, ""))
 
     def run(self):
+        print(f"\n📂 저장경로 : {self.save_dir}\n")
         for sheet in self.wb.sheetnames:
             ws = self.wb[sheet]
             start_row = self.detect_data_start_row(ws)
@@ -82,4 +83,4 @@ class ExcelToCSVConverter_ver1:
 
             out_csv = os.path.join(self.save_dir, f"{self.prefix}_{sheet}.csv")
             df.to_csv(out_csv, index=False, encoding="utf-8-sig")
-            print(f"✅ [{self.prefix}_{sheet}.csv] → 저장 완료. (컬럼 {len(df.columns)}개, 데이터 {len(df)}행)")
+            print(f"💾 [{self.prefix}_{sheet}.csv] → 저장 완료. (컬럼 {len(df.columns)}개, 데이터 {len(df)}행)")

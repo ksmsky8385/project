@@ -86,6 +86,7 @@ class ExcelToCSVConverter_ver2:
         return pd.DataFrame(records, columns=["연도"] + self.fixed_cols + year_columns)
 
     def run(self):
+        print(f"\n📂 저장경로 : {self.save_dir}\n")
         year_map = self.extract_year_slices()
         data_start = self.detect_data_start_row()
         data_end = self.detect_data_end_row(data_start)
@@ -99,4 +100,4 @@ class ExcelToCSVConverter_ver2:
             if df is not None and not df.empty:
                 out_csv = os.path.join(self.save_dir, f"{self.output_prefix}_{year}.csv")
                 df.to_csv(out_csv, index=False, encoding="utf-8-sig")
-                print(f"✅ [{os.path.basename(out_csv)}] →  저장 완료 ({df.shape[0]}행, {df.shape[1]}열)")
+                print(f"💾 [{os.path.basename(out_csv)}] →  저장 완료 ({df.shape[0]}행, {df.shape[1]}열)")
