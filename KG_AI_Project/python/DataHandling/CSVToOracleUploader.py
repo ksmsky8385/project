@@ -38,11 +38,25 @@ class CSVToOracleUploader:
                 create_sql = f'CREATE TABLE "{table_name}" ({col_defs})'
 
                 try:
+                    # 🗑️ 테이블이 존재한다면 삭제하고 생성
+                    try:
+                        cursor.execute(f'DROP TABLE "{table_name}"')
+                        print(f"🗑️ 기존 테이블 {table_name} 삭제 완료")
+                    except oracledb.DatabaseError as e:
+                        if "ORA-00942" in str(e):
+                            print(f"ℹ️ 테이블 {table_name} 없음 (DROP 생략)")
+                        else:
+                            print(f"❌ DROP TABLE 오류: {e}")
+                            raise
+
+                    # 🧱 테이블 생성
                     cursor.execute(create_sql)
                     print(f"🧱 테이블 {table_name} 생성 완료")
-                except oracledb.DatabaseError:
-                    print(f"⚠️ 테이블 {table_name} 이미 존재하거나 생성 실패 → 건너뜀")
+
+                except oracledb.DatabaseError as e:
+                    print(f"❌ 테이블 생성 오류 ({table_name}): {e}")
                     continue
+
 
                 placeholders = ', '.join([f':{i+1}' for i in range(len(columns))])
                 col_names = ', '.join([f'"{col}"' for col in columns])
