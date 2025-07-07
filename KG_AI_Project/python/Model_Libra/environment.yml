@@ -1,0 +1,17 @@
+name: your_project_env
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - scikit-learn
+  - oracledb
+  - openpyxl
+  - requests
+  - beautifulsoup4
+  - selenium
+  - lxml
+  - tqdm
+  - python-dotenv
+

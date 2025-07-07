@@ -1,2 +1,11 @@
+# ✅ Oracle 관련 확장자 무시 (예: DBF 파일)
 *.DBF
-KG_AI_Project/resource/raw_files/~$기본통계_시설.xlsx
+
+# ✅ 환경설정 파일 무시 (.env)
+.env
+
+# ✅ MS Office 임시 파일 무시
+~$*.xlsx
+
+# ✅ 특정 경로의 임시 파일 무시 (지정된 경로)
+KG_AI_Project/resource/raw_files
