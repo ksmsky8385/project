@@ -1,8 +1,7 @@
-# DBHandling/DataMergerAndExporter.py
 import os
 import pandas as pd
 from core_utiles.OracleDBConnection import OracleDBConnection
-from core_utiles.OracleSchemaBuilder import OSB
+from core_utiles.OracleTableCreater import OTC  # 테이블 생성 유틸 호출
 
 class DataMergerAndExporter:
     def __init__(self, db: OracleDBConnection, years, file_prefix, table_prefix):
@@ -34,8 +33,8 @@ class DataMergerAndExporter:
 
             unmatched_snms = df_num[~df_num["SNM"].isin(df_td["SNM"])]["SNM"].tolist()
             if unmatched_snms:
-                print(f"{year}년: NUM00에 있지만 TD에 없는 SNM ➜ {len(unmatched_snms)}개")
-                print(f"   누락된 SNM 목록 ➜ {unmatched_snms}")
+                print(f"{year}년: NUM00에 있지만 TD에 없는 SNM → {len(unmatched_snms)}개")
+                print(f"   누락된 SNM 목록 → {unmatched_snms}")
 
             td_filtered = td_filtered.set_index("SNM").reindex(df_num["SNM"].values).reset_index()
 
@@ -44,7 +43,6 @@ class DataMergerAndExporter:
 
             df_merge = pd.concat([df_num.reset_index(drop=True), td_filtered.drop(columns="SNM")], axis=1)
 
-            # CSV 저장
             csv_path = f"{self.file_prefix}_{year}.csv"
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             df_merge.to_csv(csv_path, index=False, encoding='utf-8-sig')
@@ -55,16 +53,7 @@ class DataMergerAndExporter:
     def upload_to_oracle(self, df, year):
         table_name = f"{self.table_prefix}_{year}"
         try:
-            try:
-                self.cursor.execute(f'DROP TABLE "{table_name}"')
-            except Exception as e:
-                if "ORA-00942" in str(e):
-                    print(f"{table_name} 테이블 없음 → DROP 생략")
-                else:
-                    raise
-
-            col_defs = OSB(df)  # 데이터 기반 타입 추론
-            self.cursor.execute(f'CREATE TABLE "{table_name}" ({col_defs})')
+            OTC(self.cursor, table_name, df)  # 공통 생성 유틸 사용
 
             rows = [tuple(r) for r in df.itertuples(index=False, name=None)]
             placeholders = ', '.join([f":{i+1}" for i in range(len(df.columns))])

@@ -2,7 +2,7 @@
 import os
 import pandas as pd
 from core_utiles.OracleDBConnection import OracleDBConnection
-from core_utiles.OracleSchemaBuilder import OSB
+from core_utiles.OracleTableCreater import OTC
 
 class FilteredScoreUploader:
     def __init__(self, db: OracleDBConnection, years, input_abbr, csv_prefix=None, table_name=None):
@@ -82,20 +82,13 @@ class FilteredScoreUploader:
         # Oracle 저장
         if self.table_name:
             try:
-                self.cursor.execute(f'DROP TABLE "{self.table_name}"')
-            except:
-                print(f"테이블 {self.table_name} 제거됨 또는 없음")
+                OTC(self.cursor, self.table_name, df_merged)  # 공통 모듈로 테이블 생성
+                rows = [tuple(row) for row in df_merged.itertuples(index=False, name=None)]
+                placeholders = ', '.join([f':{i+1}' for i in range(len(df_merged.columns))])
+                insert_sql = f'INSERT INTO "{self.table_name}" VALUES ({placeholders})'
 
-            col_defs = ', '.join([
-                f'"{col}" CLOB' if df_merged[col].dtype == object else f'"{col}" FLOAT'
-                for col in df_merged.columns
-            ])
-            self.cursor.execute(f'CREATE TABLE "{self.table_name}" ({col_defs})')
-
-            rows = [tuple(row) for row in df_merged.itertuples(index=False, name=None)]
-            placeholders = ', '.join([f':{i+1}' for i in range(len(df_merged.columns))])
-            insert_sql = f'INSERT INTO "{self.table_name}" VALUES ({placeholders})'
-            self.cursor.executemany(insert_sql, rows)
-            self.conn.commit()
-
-            print(f"Oracle 저장 완료 → {self.table_name} ({df_merged.shape[0]}행 × {df_merged.shape[1]}열)")
+                self.cursor.executemany(insert_sql, rows)
+                self.conn.commit()
+                print(f"Oracle 저장 완료 → {self.table_name} ({df_merged.shape[0]}행 × {df_merged.shape[1]}열)")
+            except Exception as e:
+                print(f"Oracle 저장 실패 ({self.table_name}) → {e}")

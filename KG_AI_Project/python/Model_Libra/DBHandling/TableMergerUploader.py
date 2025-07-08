@@ -1,12 +1,11 @@
-# DBHandling/TableMergerUploader.py
 import os
 import pandas as pd
 from core_utiles.OracleDBConnection import OracleDBConnection
-from core_utiles.OracleSchemaBuilder import OSB
+from core_utiles.OracleTableCreater import OTC  # 테이블 생성 함수 호출
 
 class TableMergerUploader:
     def __init__(self, db: OracleDBConnection, years, common_cols, csv_prefix=None, table_prefix=None):
-        self.db = db  # OracleDBConnection 객체
+        self.db = db
         self.conn = db.conn
         self.cursor = db.cursor
         self.years = years
@@ -16,7 +15,6 @@ class TableMergerUploader:
 
     def load_and_merge_tables(self, year):
         dfs = []
-
         for i in range(1, 6):
             table = f"NUM0{i}_{year}"
             try:
@@ -26,16 +24,13 @@ class TableMergerUploader:
                 dfs.append(df)
             except Exception as e:
                 print(f"{table} 불러오기 실패: {e}")
-
         if not dfs:
             return None
 
-        # ID 기준 병합
         df_base = dfs[0]
         for df_other in dfs[1:]:
             df_base = pd.merge(df_base, df_other, on="ID", how="outer", suffixes=('', '_dup'))
 
-        # 공통컬럼 중복 제거
         for col in self.common_cols:
             dup_col = f"{col}_dup"
             if dup_col in df_base.columns:
@@ -48,10 +43,7 @@ class TableMergerUploader:
 
     def upload_to_oracle(self, df, table_name):
         try:
-            # OSB 함수 사용 → 컬럼별 데이터타입 추론
-            col_defs = OSB(df)
-            self.cursor.execute(f'DROP TABLE "{table_name}"')
-            self.cursor.execute(f'CREATE TABLE "{table_name}" ({col_defs})')
+            OTC(self.cursor, table_name, df)  # 공통 생성 함수 사용
 
             rows = [tuple(row) for row in df.itertuples(index=False, name=None)]
             placeholders = ', '.join([f':{i+1}' for i in range(len(df.columns))])

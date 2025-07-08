@@ -23,9 +23,10 @@ else:
 
 # 실행 대상 패키지 정의
 execution_order = [
-    "DataHandling",
-    "DBHandling"
-    # "ML"
+    # "DataHandling",
+    # "DBHandling",
+    # "ML_RFR",
+    "EstimationFlow"
 ]
 
 # 실행 루프
@@ -45,7 +46,15 @@ for package in execution_order:
 
     print(f"\n실행 중: {package}/__main__.py")
 
-    result = subprocess.run([sys.executable, main_path], capture_output=True, text=True)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = PROJECT_ROOT
+    result = subprocess.run(
+                            [sys.executable, main_path],
+                            env=env,
+                            capture_output=True,
+                            text=True
+                            )
+
 
     print(result.stdout)
 

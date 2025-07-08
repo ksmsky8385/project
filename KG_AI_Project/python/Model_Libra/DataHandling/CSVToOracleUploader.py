@@ -1,10 +1,10 @@
 import os
 import pandas as pd
-from core_utiles.OracleSchemaBuilder import OSB  # 컬럼 타입 추론 함수
+from core_utiles.OracleTableCreater import OTC  # 테이블 생성 모듈
 
 class CSVToOracleUploader:
     def __init__(self, db, csv_dir):
-        self.db = db  # OracleDBConnection 객체
+        self.db = db
         self.csv_dir = csv_dir
         self.file_list = [f for f in os.listdir(csv_dir) if f.endswith(".csv")]
 
@@ -28,27 +28,10 @@ class CSVToOracleUploader:
                 continue
 
             try:
-                col_defs = OSB(df)  # 타입 추론 모듈 사용
-                create_sql = f'CREATE TABLE "{table_name}" ({col_defs})'
-            except Exception as e:
-                print(f"[파일: {filename}] 테이블 타입 추론 실패: {e}")
-                continue
-
-            try:
-                cursor.execute(f'DROP TABLE "{table_name}"')
-                print(f"기존 테이블 {table_name} 삭제 완료")
-            except Exception as e:
-                if "ORA-00942" in str(e):
-                    print(f"테이블 {table_name} 없음 (DROP 생략)")
-                else:
-                    print(f"DROP 오류: {e}")
-                    continue
-
-            try:
-                cursor.execute(create_sql)
+                OTC(cursor, table_name, df)
                 print(f"테이블 {table_name} 생성 완료")
             except Exception as e:
-                print(f"생성 오류: {e}")
+                print(f"테이블 생성 오류 ({table_name}): {e}")
                 continue
 
             columns = df.columns.tolist()

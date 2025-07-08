@@ -60,7 +60,7 @@ class CSVHeaderRenamer:
                         if byte_len > 30:
                             col_index = renamed_columns.index(col)
                             excel_col = self.column_index_to_excel_letter(col_index)
-                            print(f"⚠️  byte초과 : {col} → {byte_len} bytes → {excel_col}열")
+                            print(f"byte초과 : {col} → {byte_len} bytes → {excel_col}열")
 
 
                 except Exception as e:
