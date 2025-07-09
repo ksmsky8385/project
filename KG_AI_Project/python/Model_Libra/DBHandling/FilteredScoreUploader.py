@@ -20,7 +20,7 @@ class FilteredScoreUploader:
         matched_cols_list = []
 
         for year in self.years:
-            print(f"\n🔄 {year}년 데이터 처리 중...")
+            print(f"\n{year}년 데이터 처리 중...")
 
             try:
                 df = pd.read_sql(f'SELECT * FROM "NUM07_{year}"', self.conn)

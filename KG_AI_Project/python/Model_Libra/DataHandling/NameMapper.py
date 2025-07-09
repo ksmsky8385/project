@@ -1,5 +1,5 @@
 import pandas as pd
-from project.KG_AI_Project.python.Model_Libra.core_utiles.Mapper import NMP  # 외부 매핑 함수 호출
+from core_utiles.Mapper import NMP  # 외부 매핑 함수 호출
 
 class NameMapper:
     def __init__(self, input_path, output_path):

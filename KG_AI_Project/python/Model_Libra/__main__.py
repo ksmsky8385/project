@@ -23,10 +23,12 @@ else:
 
 # 실행 대상 패키지 정의
 execution_order = [
-    # "DataHandling",
-    # "DBHandling",
-    # "ML_RFR",
-    "EstimationFlow"
+    "DataHandling",
+    "DBHandling",
+    "ML_RFR",
+    "EstimationFlow",
+    "ML_XGB",
+    "EstimationFuture"
 ]
 
 # 실행 루프

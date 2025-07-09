@@ -79,8 +79,8 @@ class SCRTableBuilder:
 
         # Create Oracle table
         cursor = self.conn.cursor()
-        OTC(cursor, "LIBRA.NUM09_Estimation", final_table)
-        print("[Oracle DB 테이블 생성 완료] LIBRA.NUM09_Estimation")
+        OTC(cursor, "NUM09_Estimation", final_table)
+        print("[Oracle DB 테이블 생성 완료] NUM09_Estimation")
 
     def _load_scr_est(self, year: int, t_index: int) -> pd.DataFrame:
         query = f"SELECT ID, SCR_EST FROM LIBRA.NUM08_{year}"

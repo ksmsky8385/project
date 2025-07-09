@@ -1,6 +1,6 @@
 import os
 import csv
-from project.KG_AI_Project.python.Model_Libra.core_utiles.Mapper import HMP  # 헤더 매핑 함수
+from core_utiles.Mapper import HMP  # 헤더 매핑 함수
 
 class HeaderAbbreviationMapper:
     def __init__(self, input_path: str, output_path: str):
