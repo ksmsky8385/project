@@ -1,8 +1,9 @@
 from sklearn.ensemble import RandomForestRegressor
+from ML_RFR.config import RFR_PARAMS
 
 class RandomForestModel:
     def __init__(self):
-        self.model = RandomForestRegressor(random_state=42)
+        self.model = RandomForestRegressor(**RFR_PARAMS)
 
     def fit(self, X, y):
         self.model.fit(X, y)

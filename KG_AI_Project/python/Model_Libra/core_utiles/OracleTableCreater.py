@@ -2,12 +2,6 @@ import pandas as pd
 from core_utiles.OracleSchemaBuilder import OSB
 
 def OTC(cursor, table_name: str, df: pd.DataFrame):
-    """
-    Oracle 테이블 생성 함수 (Oracle Table Creater)
-    - cursor: OracleDBConnection().cursor
-    - table_name: 생성할 테이블 이름
-    - df: 테이블 구조 기반이 되는 pandas DataFrame
-    """
     # 기존 테이블 제거
     try:
         cursor.execute(f'DROP TABLE "{table_name}"')

@@ -35,11 +35,19 @@ Model_Libra/
 │   ├── FilteredScoreUploader.py <- 인풋 & 타깃 컬럼 정규화 테이블 생성 클래스  
 │   └── TableMergerUploader.py <- 모든 데이터테이블 연도별로 병합 및 테이블 생성 클래스  
 │  
-├── EstimationFlow/ <- 머신러닝 모델을 이용한 예측데이터 테이블링 및 차팅 패키지  
+├── EstimationFlow/ <- RFR 모델을 이용한 예측데이터 테이블링 패키지  
 │   ├── __init__.py  
 │   ├── __main__.py <- EstimationFlow 패키지 실행  
 │   ├── ModelLoader.py <- 머신러닝 모델 로딩 클래스  
-│   └── SCRTableBuilder.py <- 모든 대학 별 점수 예측 및 예측점수 포함 테이블 생성 클래스  
+│   ├── SCRTableBuilder.py <- 모든 대학 별 점수 예측 및 예측점수 포함 테이블 생성 클래스  
+│   └── SCRTableUpdater.py <- 생성된 테이블에 등수 및 피쳐값 병합 업데이트 클래스  
+│  
+├── EstimationFuture/ <- XGB 모델을 이용한 예측데이터 테이블링 패키지  
+│   ├── __init__.py  
+│   ├── __main__.py <- EstimationFlow 패키지 실행  
+│   ├── ModelLoader.py <- 머신러닝 모델 로딩 클래스  
+│   ├── SCRTableBuilder.py <- 예측된 미래점수 테이블 생성 클래스  
+│   └── SCRTableUpdater.py <- 미래점수값을 이용한 추이 데이터 추가 업데이트 클래스  
 │  
 ├── ML_RFR/ <- 렌덤포레스트 회귀 머신러닝 모델 패키지  
 │   ├── models/  
@@ -69,7 +77,7 @@ Model_Libra/
 │   ├── __init__.py  
 │   ├── __main__.py <- ML_XGB 패키지 실행  
 │   ├── cleaner.py <- 학습 데이터 전처리 및 결측치 처리 클래스  
-│   ├── config.py <- 모델 설정값, 하이퍼파라미터 등 환경설정 로딩 클래스   
+│   ├── config.py <- 모델 설정값, 하이퍼파라미터 등 환경설정 로딩 클래스  
 │   ├── controller.py <- 전체 파이프라인 흐름 제어 클래스  
 │   ├── exporter.py <- 학습된 모델 피클 익스포트 클래스  
 │   ├── fetcher.py <- DB에서 학습 데이터 추출 클래스  
@@ -83,6 +91,7 @@ Model_Libra/
 ├── environment.yml <- " conda env create -f environment.yml " 아나콘다 가상환경 세팅  
 ├── README.md <- 설명글  
 └── requirements.txt <- " pip install -r requirements.txt " 필요 라이브러리 설치  
+
 
 
 

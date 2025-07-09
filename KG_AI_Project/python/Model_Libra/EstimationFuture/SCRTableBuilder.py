@@ -1,62 +1,101 @@
-import os
 import pandas as pd
-from EstimationFlow.ModelLoader import ModelLoader
-from ML_RFR.cleaner import DataCleaner
-from ML_RFR.config import INPUT_COLUMNS
-from core_utiles.config_loader import CSV_NUM08_PREFIX
+import os
+
+from ML_XGB.config import Config
+from EstimationFuture.ModelLoader import ModelLoader
+from core_utiles.config_loader import CSV_NUM09_PREFIX
+from core_utiles.OracleDBConnection import OracleDBConnection
 from core_utiles.OracleTableCreater import OTC
 
 class SCRTableBuilder:
-    def __init__(self, conn, engine, year: str, source_table: str):
-        self.conn = conn          # oracledb connection
-        self.engine = engine      # SQLAlchemy engine
-        self.year = year
-        self.source_table = source_table
-        self.output_table = f"NUM08_{year}"
-        self.output_csv = f"{CSV_NUM08_PREFIX}_{year}.csv"
+    def __init__(self, model_loader: ModelLoader):
+        self.model = model_loader.load()
 
-        self.model = ModelLoader().load()
-        self.cleaner = DataCleaner()
+        self.db = OracleDBConnection()
+        self.db.connect()
+        self.conn = self.db.conn
+        self.engine = self.db.engine
 
-        os.makedirs(os.path.dirname(self.output_csv), exist_ok=True)
+        self.window = Config.ROLLING_WINDOW
+        self.prefix = CSV_NUM09_PREFIX
+        self.default_columns = ["ID", "SNM", "STYP", "FND", "RGN", "USC"]
+        self.latest_year = self._get_latest_year()
+        self.predict_year = self.latest_year + 1
 
-    def run(self) -> bool:
+    def _get_latest_year(self) -> int:
+        query = """
+            SELECT MAX(TO_NUMBER(REGEXP_SUBSTR(table_name, '\\d{4}'))) AS MAX_YR
+            FROM all_tables
+            WHERE table_name LIKE 'NUM08_%' AND owner = 'LIBRA'
+        """
         try:
-            print(f"[예측 시작] {self.source_table} → {self.output_table}")
-
-            query = f"SELECT * FROM {self.source_table}"
-            df = pd.read_sql(query, con=self.conn)
-
-            print(f"원본 테이블: {self.source_table}")
-
-            missing = [col for col in INPUT_COLUMNS if col not in df.columns]
-            print(f"입력 컬럼 누락 개수: {len(missing)}")
-            if missing:
-                print(f"[DEBUG] 누락된 컬럼명: {missing}")
-
-            print(f"예측 대상 행 수: {len(df)}")
-
-            df_clean = self.cleaner.clean_numeric(df, INPUT_COLUMNS)
-            predictions = self.model.predict(df_clean[INPUT_COLUMNS])
-            df["SCR_EST"] = predictions
-
-            final_cols = ["YR", "ID", "SNM", "STYP", "FND", "RGN", "USC", "SCR_EST"]
-            df_out = df[final_cols]
-            df_out = df_out.sort_values(by="ID").reset_index(drop=True)
-
-            # 테이블 생성 (Oracle 전용 커서 사용)
-            OTC(cursor=self.conn.cursor(), table_name=self.output_table, df=df_out)
-
-            # 데이터 삽입 (SQLAlchemy 엔진 사용)
-            df_out.to_sql(name=self.output_table, con=self.engine, if_exists="append", index=False)
-
-            # CSV 저장
-            df_out.to_csv(self.output_csv, index=False, encoding="utf-8-sig")
-
-            print(f"[완료] 테이블 저장: {self.output_table}")
-            print(f"[완료] 파일 저장: {self.output_csv}")
-            return True
-
+            df = pd.read_sql(query, self.conn)
+            return int(df.iloc[0]["MAX_YR"])
         except Exception as e:
-            print(f"[실패] {self.year}년도 예측 실패 ➜ {e}")
-            return False
+            raise RuntimeError(f"[ERROR] Failed to retrieve latest year: {e}")
+
+    def build_table(self):
+        print(f"[Start] NUM09_Estimation generation - base year: {self.latest_year}, prediction year: {self.predict_year}")
+
+        # Define input years based on window size (past years)
+        input_years = [self.latest_year - i for i in reversed(range(self.window))]
+
+        # Load base university info
+        info_df = self._load_info(self.latest_year)
+
+        # Load SCR_EST features for each year as SCR_EST_t-{i}
+        scr_dfs = [self._load_scr_est(year, i) for i, year in enumerate(input_years)]
+        feature_df = self._merge_scr_est_by_id(scr_dfs)
+
+        # Merge features with university info
+        table = pd.merge(info_df, feature_df, on="ID")
+
+        # Predict future score using model
+        feature_cols = [f"SCR_EST_t-{i}" for i in range(self.window)]
+        input_df = table[feature_cols].copy()
+        y_pred = self.model.predict(input_df)
+        table[f"SCR_EST_{self.predict_year}"] = y_pred
+
+        # Rename SCR_EST_t-{i} columns to SCR_EST_{year}
+        rename_map = {
+            f"SCR_EST_t-{i}": f"SCR_EST_{self.predict_year - (i + 1)}"
+            for i in range(self.window)
+        }
+        table.rename(columns=rename_map, inplace=True)
+
+        # Sort score columns by year ascending
+        score_cols = sorted(rename_map.values(), key=lambda x: int(x.split("_")[-1]))
+        final_cols = self.default_columns + score_cols + [f"SCR_EST_{self.predict_year}"]
+        final_table = table[final_cols]
+
+        # Sort ID descending
+        final_table = final_table.sort_values(by="ID", ascending=True).reset_index(drop=True)
+
+        # Save to CSV
+        csv_path = os.path.join(self.prefix, "NUM09_가능성예측.csv")
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        final_table.to_csv(csv_path, index=False, encoding="utf-8-sig")
+        print(f"[CSV파일 생성완료] {csv_path}")
+
+        # Create Oracle table
+        cursor = self.conn.cursor()
+        OTC(cursor, "LIBRA.NUM09_Estimation", final_table)
+        print("[Oracle DB 테이블 생성 완료] LIBRA.NUM09_Estimation")
+
+    def _load_scr_est(self, year: int, t_index: int) -> pd.DataFrame:
+        query = f"SELECT ID, SCR_EST FROM LIBRA.NUM08_{year}"
+        df = pd.read_sql(query, self.conn)
+        return df.rename(columns={"SCR_EST": f"SCR_EST_t-{t_index}"})
+
+    def _load_info(self, year: int) -> pd.DataFrame:
+        query = f"""
+            SELECT ID, SNM, STYP, FND, RGN, USC
+            FROM LIBRA.NUM08_{year}
+        """
+        return pd.read_sql(query, self.conn)
+
+    def _merge_scr_est_by_id(self, dfs: list[pd.DataFrame]) -> pd.DataFrame:
+        merged = dfs[0]
+        for df in dfs[1:]:
+            merged = pd.merge(merged, df, on="ID")
+        return merged

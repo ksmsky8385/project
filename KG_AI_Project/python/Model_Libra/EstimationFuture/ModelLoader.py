@@ -1,8 +1,8 @@
 import joblib
-from core_utiles.config_loader import MODEL_NUM01_SAVE_PATH
+from core_utiles.config_loader import MODEL_NUM02_SAVE_PATH
 
 class ModelLoader:
-    def __init__(self, path=MODEL_NUM01_SAVE_PATH):
+    def __init__(self, path=MODEL_NUM02_SAVE_PATH):
         self.path = path
 
     def load(self):
