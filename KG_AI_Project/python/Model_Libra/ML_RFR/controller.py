@@ -45,7 +45,7 @@ class RFRPipelineController:
         print(f"[저장 완료] 모델 저장 위치: {MODEL_NUM01_SAVE_PATH}")
 
         # 5. 단일 예측 테스트
-        school_name = "경상국립대학교"
+        school_name = "가야대학교"
         table_name = "LIBRA.NUM06_2014"
         predictor = ModelPredictor(model.model, self.conn, INPUT_COLUMNS)
         score, features = predictor.predict_by_school(school_name, table_name)
