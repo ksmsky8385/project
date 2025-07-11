@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libra - 학습환경 예측</title>
+    <link rel="stylesheet" href="../css/style_chartpage_num01.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo" onclick="navigateTo('main')" style="cursor: pointer;">
+                    <div class="logo-icon">
+                        <img src="../images/logo.jpeg" alt="Libra Logo">
+                    </div>
+                    Libra
+                </div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item" onclick="navigateTo('learning')">학습환경 분석</a>
+                    <a href="#" class="nav-item active" onclick="navigateTo('prediction')">학습환경 예측</a>
+                    <a href="#" class="nav-item" onclick="navigateTo('myservice')">마이 서비스</a>
+                </nav>
+                <button class="login-btn" onclick="navigateTo('mypage')">
+                    <span class="login-icon">👤</span>
+                    My Page
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="main-layout">
+                <!-- 왼쪽 컨트롤 패널 -->
+                <aside class="control-panel">
+                    <div class="panel-section">
+                        <h3>데이터 설정</h3>
+                        <div class="form-group">
+                            <label for="tableSelect">예측 데이터</label>
+                            <select id="tableSelect" onchange="onTableChange()">
+                                <option value="Num08_환경점수예측_2014.csv">환경점수예측_2014</option>
+                                <option value="Num08_환경점수예측_2015.csv">환경점수예측_2015</option>
+                                <option value="Num08_환경점수예측_2016.csv">환경점수예측_2016</option>
+                                <option value="Num08_환경점수예측_2017.csv">환경점수예측_2017</option>
+                                <option value="Num08_환경점수예측_2018.csv">환경점수예측_2018</option>
+                                <option value="Num08_환경점수예측_2019.csv">환경점수예측_2019</option>
+                                <option value="Num08_환경점수예측_2020.csv">환경점수예측_2020</option>
+                                <option value="Num08_환경점수예측_2021.csv">환경점수예측_2021</option>
+                                <option value="Num08_환경점수예측_2022.csv">환경점수예측_2022</option>
+                                <option value="Num08_환경점수예측_2023.csv">환경점수예측_2023</option>
+                                <option value="Num08_환경점수예측_2024.csv">환경점수예측_2024</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3>피처 선택</h3>
+                        <div class="form-group">
+                            <label for="featureSelect">분석 변수</label>
+                            <select id="featureSelect" onchange="onFeatureChange()">
+                                <!-- CSV 파일 로드 후 동적으로 생성 -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="chartType">차트 타입</label>
+                            <select id="chartType" onchange="onChartTypeChange()">
+                                <option value="bar">막대 차트</option>
+                                <option value="line">선 차트</option>
+                                <option value="scatter">산점도</option>
+                                <option value="pie">원형 차트</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sortOrder">정렬 방식</label>
+                            <select id="sortOrder" onchange="onSortOrderChange()">
+                                <option value="default">기본 순서</option>
+                                <option value="asc" selected>오름차순</option>
+                                <option value="desc">내림차순</option>
+                                <option value="alphabetical">가나다순</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dataRange">데이터 범위</label>
+                            <select id="dataRange" onchange="onDataRangeChange()">
+                                <option value="all">전체 데이터</option>
+                                <option value="top10">상위 10개</option>
+                                <option value="top20">상위 20개</option>
+                                <option value="top50">상위 50개</option>
+                                <option value="bottom10">하위 10개</option>
+                                <option value="bottom20">하위 20개</option>
+                                <option value="bottom50">하위 50개</option>
+                            </select>
+                        </div>
+
+                        <button class="generate-btn" onclick="generateChart()">
+                            차트 생성
+                        </button>
+                    </div>
+
+                    <div class="panel-actions">
+                        <button class="action-btn primary" onclick="exportChart()">출력하기 추가</button>
+                        <button class="action-btn secondary" onclick="saveAnalysis()">내 즐겨찾기</button>
+                    </div>
+                </aside>
+
+                <!-- 오른쪽 차트 영역 -->
+                <section class="chart-area">
+                    <div class="chart-header">
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" onclick="switchTab('prediction1')">예측 데이터</button>
+                            <button class="chart-tab" onclick="switchTab('prediction2')">통계 분석</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                        <div class="chart-loading" id="chartLoading" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>차트를 생성하고 있습니다...</p>
+                        </div>
+                        <div class="chart-placeholder" id="chartPlaceholder">
+                            <div class="placeholder-content">
+                                <div class="placeholder-icon">🔮</div>
+                                <h3>예측 차트가 표시될 영역입니다</h3>
+                                <p>왼쪽 패널에서 변수를 선택하고 '차트 생성' 버튼을 클릭하세요.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-info">
+                        <div class="info-card">
+                            <h4>현재 예측 정보</h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">데이터:</span>
+                                    <span class="value" id="currentTable">환경점수예측_2014</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">변수:</span>
+                                    <span class="value" id="currentFeature">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">차트 타입:</span>
+                                    <span class="value" id="currentChartType">막대 차트</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">정렬 방식:</span>
+                                    <span class="value" id="currentSortOrder">오름차순</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">데이터 수:</span>
+                                    <span class="value" id="dataCount">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/script_prediction_page.js"></script>
+</body>
+</html>

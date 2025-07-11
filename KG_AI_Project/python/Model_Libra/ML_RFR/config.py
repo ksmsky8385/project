@@ -42,12 +42,12 @@ FILTERED_TABLE = "LIBRA.FILTERED"
 
 # RFR 하이퍼파라미터
 RFR_PARAMS = {
-    "n_estimators": 500,
-    "max_depth": 15,
-    "min_samples_split": 5,
-    "min_samples_leaf": 2,
-    "max_features": "sqrt",
-    "random_state": 42,
-    "n_jobs": -1
+    "n_estimators": 400,         # 생성할 트리 수 (숲의 크기). 클수록 성능 향상되지만 연산량 증가
+    "max_depth": 10,             # 각 트리의 최대 깊이. 과적합 방지를 위해 제한함
+    "min_samples_split": 5,      # 내부 노드를 분할할 최소 샘플 수. 값이 클수록 일반화 가능성 높아짐
+    "min_samples_leaf": 2,       # 리프 노드에 필요한 최소 샘플 수. 너무 작으면 과적합 위험
+    "max_features": "sqrt",      # 각 노드에서 고려할 최대 피처 수 ("sqrt"는 전체 피처의 √개 사용)
+    "random_state": 42,          # 랜덤 시드 (결과 재현성을 위해 설정)
+    "n_jobs": -1                 # 병렬 처리에 사용할 CPU 코어 수 (-1이면 모든 코어 사용)
 }
 

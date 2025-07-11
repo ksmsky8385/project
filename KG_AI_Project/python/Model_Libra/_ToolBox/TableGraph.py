@@ -38,8 +38,8 @@ def plot_sorted_feature(df, feature, mode="all", count=None, save=False, save_pa
         return
 
     
-    df_sorted = df.sort_values(by="SCR", ascending=True)
-    # df_sorted = df.sort_values(by=["YR", "SCR"], ascending=[True, True])
+    # df_sorted = df.sort_values(by="SCR", ascending=True)
+    df_sorted = df.sort_values(by=["YR", "SCR"], ascending=[True, True])
     
     if mode == "top" and count:
         df_sorted = df_sorted.tail(count)
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # feature = "SCR"           # 점수
     # feature = "APS_APS"       # 재학생 1인당 도서관건물 연면적
     # feature = "BGT_MCT"       # 예산_자료구입비계
-    feature = "BGT_UBGT"      # 예산_대학총예산
+    # feature = "BGT_UBGT"      # 예산_대학총예산
     # feature = "BPS_BPS"       # 재학생 1인당 소장도서수
     # feature = "BR_BCNT_SUM"   # 도서자료_책수_계
     # feature = "CPSS_CPS"      # 재학생 1인당 자료구입비(결산)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # feature = "SPK_SPK"       # 재학생 1,000명당 도서관 직원수
     # feature = "STL_MCT"       # 결산_자료구입비계
     # feature = "STL_USTL"      # 결산_대학총결산
-    # feature = "VPS_VPS"       # 재학생 1인당 도서관방문자수
+    feature = "VPS_VPS"       # 재학생 1인당 도서관방문자수
     # feature = "VUC_UC_LUC"    # 봉사대상자수 및 이용자수_도서관 이용자수
 
     mode        = "all"

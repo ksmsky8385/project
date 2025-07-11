@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libra - 학습환경 분석</title>
+    <link rel="stylesheet" href="../css/style_chartpage_num01.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo" onclick="navigateTo('main')" style="cursor: pointer;">
+                    <div class="logo-icon">
+                        <img src="../images/logo.jpeg" alt="Libra Logo">
+                    </div>
+                    Libra
+                </div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item active" onclick="navigateTo('learning')">학습환경 분석</a>
+                    <a href="#" class="nav-item" onclick="navigateTo('development')">학습환경 예측</a>
+                    <a href="#" class="nav-item" onclick="navigateTo('myservice')">마이 서비스</a>
+                </nav>
+                <button class="login-btn" onclick="navigateTo('mypage')">
+                    <span class="login-icon">👤</span>
+                    My Page
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="main-layout">
+                <!-- 왼쪽 컨트롤 패널 -->
+                <aside class="control-panel">
+                    <div class="panel-section">
+                        <h3>데이터 설정</h3>
+                        <div class="form-group">
+                            <label for="tableSelect">테이블 선택</label>
+                            <select id="tableSelect" onchange="onTableChange()">
+                                <option value="LIBRA.FILTERED">LIBRA.FILTERED</option>
+                                <option value="LIBRA.RAW">LIBRA.RAW</option>
+                            </select>
+                        </div>
+                    </div>
+                        <!-- 임시 미구현 -->
+                    <!-- <div class="panel-section">
+                        <h3>데이터 테이블 No.1</h3>
+                        <div class="table-info">
+                            <div class="info-item">
+                                <span class="info-label">기본 사용 변수:</span>
+                                <span class="info-value">학교명/점수</span>
+                            </div>
+                            <div class="star-indicator active">⭐</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3>데이터 테이블 No.2</h3>
+                        <div class="table-info">
+                            <div class="info-item">
+                                <span class="info-label">현재 사용 변수:</span>
+                                <span class="info-value">미정/예산정보</span>
+                            </div>
+                            <div class="star-indicator">⭐</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3>변수 분류 No.1</h3>
+                        <div class="table-info">
+                            <div class="info-item">
+                                <span class="info-label">분석 카테고리:</span>
+                                <span class="info-value">점수 기반</span>
+                            </div>
+                            <div class="status-indicator active">🔴</div>
+                        </div>
+                    </div> -->
+
+                    <div class="panel-section">
+                        <h3>피처 선택</h3>
+                        <div class="form-group">
+                            <label for="featureSelect">분석 변수</label>
+                            <select id="featureSelect" onchange="onFeatureChange()">
+                                <option value="SCR">점수 (SCR)</option>
+                                <option value="APS_APS">재학생 1인당 도서관건물 연면적</option>
+                                <option value="BGT_MCT">예산_자료구입비계</option>
+                                <option value="BGT_UBGT">예산_대학총예산</option>
+                                <option value="BPS_BPS">재학생 1인당 소장도서수</option>
+                                <option value="BR_BCNT_SUM">도서자료_책수_계</option>
+                                <option value="CPSS_CPS">재학생 1인당 자료구입비(결산)</option>
+                                <option value="EHS_EHS">직원 1인당 평균 교육 참여 시간</option>
+                                <option value="FACLT_EQP_TPC">시설설비정보화기기(PC)수</option>
+                                <option value="FACLT_LAS">시설_도서관건물연면적</option>
+                                <option value="FACLT_RS_TRS">시설_열람석_총열람석수</option>
+                                <option value="LBRT_USTL">대학총결산 대비 도서관 자료구입비 비율</option>
+                                <option value="LPK_LPK">재학생 1,000명당 사서 직원수</option>
+                                <option value="LPS_LPS" selected>재학생 1인당 대출책수</option>
+                                <option value="LS_LB_SUM">대출현황_대출책수_계</option>
+                                <option value="LS_LU_SUM">대출현황_대출자수_계</option>
+                                <option value="SPK_SPK">재학생 1,000명당 도서관 직원수</option>
+                                <option value="STL_MCT">결산_자료구입비계</option>
+                                <option value="STL_USTL">결산_대학총결산</option>
+                                <option value="VPS_VPS">재학생 1인당 도서관방문자수</option>
+                                <option value="VUC_UC_LUC">봉사대상자수 및 이용자수_도서관 이용자수</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="chartType">차트 타입</label>
+                            <select id="chartType" onchange="onChartTypeChange()">
+                                <option value="bar">막대 차트</option>
+                                <option value="line">선 차트</option>
+                                <option value="scatter">산점도</option>
+                                <option value="pie">원형 차트</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sortOrder">정렬 방식</label>
+                            <select id="sortOrder" onchange="onSortOrderChange()">
+                                <option value="year_score">연도별 → 점수 오름차순 (기본)</option>
+                                <option value="score_only">전체 점수 오름차순</option>
+                                <option value="score_desc">전체 점수 내림차순</option>
+                                <option value="university">대학명 가나다순</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dataRange">데이터 범위</label>
+                            <select id="dataRange" onchange="onDataRangeChange()">
+                                <option value="all">전체 데이터</option>
+                                <option value="top10">상위 10개</option>
+                                <option value="top20">상위 20개</option>
+                                <option value="bottom10">하위 10개</option>
+                                <option value="bottom20">하위 20개</option>
+                            </select>
+                        </div>
+
+                        <button class="generate-btn" onclick="generateChart()">
+                            차트 생성
+                        </button>
+                    </div>
+
+                    <div class="panel-actions">
+                        <button class="action-btn primary" onclick="exportChart()">출력하기 추가</button>
+                        <button class="action-btn secondary" onclick="saveAnalysis()">내 즐겨찾기</button>
+                    </div>
+                </aside>
+
+                <!-- 오른쪽 차트 영역 -->
+                <section class="chart-area">
+                    <div class="chart-header">
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" onclick="switchTab('table1')">데이터 테이블 No.1</button>
+                            <button class="chart-tab" onclick="switchTab('table2')">평균값 테이블 No.1</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                        <div class="chart-loading" id="chartLoading" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>차트를 생성하고 있습니다...</p>
+                        </div>
+                        <div class="chart-placeholder" id="chartPlaceholder">
+                            <div class="placeholder-content">
+                                <div class="placeholder-icon">📊</div>
+                                <h3>차트가 표시될 영역입니다</h3>
+                                <p>왼쪽 패널에서 변수를 선택하고 '차트 생성' 버튼을 클릭하세요.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-info">
+                        <div class="info-card">
+                            <h4>현재 분석 정보</h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">테이블:</span>
+                                    <span class="value" id="currentTable">LIBRA.FILTERED</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">변수:</span>
+                                    <span class="value" id="currentFeature">재학생 1인당 대출책수</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">차트 타입:</span>
+                                    <span class="value" id="currentChartType">막대 차트</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">정렬 방식:</span>
+                                    <span class="value" id="currentSortOrder">연도별 → 점수 오름차순</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">데이터 수:</span>
+                                    <span class="value" id="dataCount">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/learning_analysis.js"></script>
+</body>
+</html>

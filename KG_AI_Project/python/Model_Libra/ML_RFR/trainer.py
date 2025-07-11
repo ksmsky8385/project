@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
 from ML_RFR.model import RandomForestModel
-from ML_RFR.utils.evaluator import evaluate_rmse
+from ML_RFR.utils.evaluator import evaluate_metrics  # ← 함수명 수정
 
 class ModelTrainer:
     def __init__(self, model):
@@ -12,5 +12,7 @@ class ModelTrainer:
         )
         self.model.fit(X_train, y_train)
         y_pred = self.model.predict(X_test)
-        rmse = evaluate_rmse(y_test, y_pred)
-        return rmse
+
+        # RMSE + MAE 반환
+        metrics = evaluate_metrics(y_test, y_pred)
+        return metrics

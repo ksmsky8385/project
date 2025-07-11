@@ -5,8 +5,8 @@ function navigateTo(page) {
     // 실제 페이지 이동 로직을 여기에 구현
     switch(page) {
         case 'learning':
-            alert('학습환경 분석 페이지로 이동합니다.');
-            // window.location.href = 'learning-analysis.html';
+            // alert('학습환경 분석 페이지로 이동합니다.'); // 이 줄 삭제 또는 주석처리
+            window.location.href = '../html/page_chartpage_num01.html'; // 이 줄 추가
             break;
         case 'development':
             alert('발전도 분석 페이지로 이동합니다.');
@@ -28,7 +28,6 @@ function navigateTo(page) {
             alert('페이지를 찾을 수 없습니다.');
     }
 }
-
 // 로그인 함수
 function showLogin() {
     alert('로그인 페이지로 이동합니다.');
