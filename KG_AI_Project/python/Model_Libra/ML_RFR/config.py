@@ -1,3 +1,20 @@
+import os
+
+# 저장 경로 설정 (환경변수에서 불러오는 방식 유지 가능)
+MODEL_SAVE_DIR = os.getenv("MODEL_SAVE_PATH", "./saved_models")
+SCALER_SAVE_DIR = os.getenv("SCALER_SAVE_PATH", "./saved_scalers")
+CLUSTER_SAVE_DIR = os.getenv("CLUSTER_SAVE_PATH", "./saved_clusters")
+
+# 접두사·접미사 및 버전 설정
+SAVE_NAME_RULES = {
+    "version": "v1.0",
+    "prefix_rfr_full": "rfr_full_",
+    "prefix_rfr_cluster": "rfr_cluster_",   # + cluster_id
+    "prefix_model_scaler": "model_scaler_",
+    "prefix_model_cluster": "model_cluster_",
+    "suffix": ".pkl"
+}
+
 # 입력 컬럼 및 예측 타깃 정의
 
 '''
@@ -40,14 +57,48 @@ INPUT_COLUMNS = [
 TARGET_COLUMN = "SCR"
 FILTERED_TABLE = "LIBRA.FILTERED"
 
-# RFR 하이퍼파라미터
-RFR_PARAMS = {
-    "n_estimators": 400,         # 생성할 트리 수 (숲의 크기). 클수록 성능 향상되지만 연산량 증가
-    "max_depth": 10,             # 각 트리의 최대 깊이. 과적합 방지를 위해 제한함
-    "min_samples_split": 5,      # 내부 노드를 분할할 최소 샘플 수. 값이 클수록 일반화 가능성 높아짐
-    "min_samples_leaf": 2,       # 리프 노드에 필요한 최소 샘플 수. 너무 작으면 과적합 위험
-    "max_features": "sqrt",      # 각 노드에서 고려할 최대 피처 수 ("sqrt"는 전체 피처의 √개 사용)
-    "random_state": 42,          # 랜덤 시드 (결과 재현성을 위해 설정)
-    "n_jobs": -1                 # 병렬 처리에 사용할 CPU 코어 수 (-1이면 모든 코어 사용)
+# 결측치 처리 설정
+MISSING_VALUE_STRATEGY = {
+    "method": "mean",           # drop, mean, median, fill
+    "fill_value": 0             # method='fill'일 때만 사용됨
 }
 
+# 이상치 처리 설정
+OUTLIER_STRATEGY = {
+    "method": "iqr",            # zscore, iqr, clip
+    "threshold": 1.5            # zscore: |z|, iqr: ×IQR 범위
+}
+
+# 스케일러 타입, 설정값
+SCALER_CONFIG = {
+    "enabled": False,
+    "type": "StandardScaler",  # "MinMaxScaler", "RobustScaler" 등도 가능
+    "params": {
+        "with_mean": True,
+        "with_std": True
+    }
+}
+
+
+# 클러스터링 설정값
+CLUSTER_CONFIG = {
+    "enabled": True,
+    "n_clusters" : 3,
+    "random_state" : 42
+}
+
+# RFR 하이퍼파라미터
+# "n_estimators"        생성할 트리 수 (숲의 크기). 클수록 성능 향상되지만 연산량 증가
+# "max_depth"           각 트리의 최대 깊이. 과적합 방지를 위해 제한함
+# "min_samples_split"   내부 노드를 분할할 최소 샘플 수. 값이 클수록 일반화 가능성 높아짐
+# "min_samples_leaf"    리프 노드에 필요한 최소 샘플 수. 너무 작으면 과적합 위험
+# "max_features"        각 노드에서 고려할 최대 피처 수 ("sqrt"는 전체 피처의 √개 사용)
+# "random_state"        랜덤 시드 (결과 재현성을 위해 설정)
+# "n_jobs"              병렬 처리에 사용할 CPU 코어 수 (-1이면 모든 코어 사용)
+
+RFR_PARAMS_BY_CLUSTER = {
+    "full": {"n_estimators": 400, "max_depth": 10, "min_samples_split": 5, "min_samples_leaf": 2, "max_features": "sqrt", "random_state": 42, "n_jobs": -1},
+    0: {"n_estimators": 400, "max_depth": 10, "min_samples_split": 5, "min_samples_leaf": 2, "max_features": "sqrt", "random_state": 42, "n_jobs": -1},
+    1: {"n_estimators": 400, "max_depth": 10, "min_samples_split": 5, "min_samples_leaf": 2, "max_features": "sqrt", "random_state": 42, "n_jobs": -1},
+    2: {"n_estimators": 400, "max_depth": 10, "min_samples_split": 5, "min_samples_leaf": 2, "max_features": "sqrt", "random_state": 42, "n_jobs": -1}
+}
