@@ -17,4 +17,5 @@ dependencies:
   - sqlalchemy
   - xgboost
   - seaborn
+  - dotenv
 
