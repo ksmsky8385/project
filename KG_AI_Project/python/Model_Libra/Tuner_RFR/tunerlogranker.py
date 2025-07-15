@@ -42,25 +42,40 @@ class TunerLogRanker:
 
         # 복합 정렬 기준
         def sort_key(trial: Dict[str, Any]):
+            stddev_mean = trial.get("mean_rank_stddev", float("inf"))
+            error_score = trial.get("rank_error_score", float("inf"))
             summary = trial.get("summary_metrics", {})
+
             cluster_r2 = summary.get("cluster_test", {}).get("R2", -999)
-            full_predict_r2 = summary.get("full_predict", {}).get("R2", -999)
-            cluster_better = 1 if cluster_r2 > full_predict_r2 else 0
-            return (cluster_r2, full_predict_r2, cluster_better)
+            full_r2 = summary.get("full_predict", {}).get("R2", -999)
+            cluster_better = 1 if cluster_r2 > full_r2 else 0
+
+            return (
+                stddev_mean,             # 평균 표준편차 낮은 순
+                error_score,             # 오차점수 낮은 순
+                -cluster_r2,             # 클러스터 R2 높은 순
+                -cluster_better,         # 클러스터가 full보다 높은 경우 우선
+                -full_r2                 # full R2 높은 순
+            )
 
         # 상위 trial 추출
-        sorted_trials = sorted(logs, key=lambda x: sort_key(x), reverse=True)[:top_k]
+        sorted_trials = sorted(logs, key=lambda x: sort_key(x))[:top_k]
 
         ranked = []
         for idx, trial in enumerate(sorted_trials, start=1):
             summary = trial.get("summary_metrics", {})
             cluster_r2 = summary.get("cluster_test", {}).get("R2", -999)
             full_predict_r2 = summary.get("full_predict", {}).get("R2", -999)
+
             ranked.append({
                 "rank": idx,
                 "timestamp": trial.get("timestamp"),
                 "n_clusters": trial.get("n_clusters"),
                 "score_keys": {
+                    "mean_rank_stddev": trial.get("mean_rank_stddev"),
+                    "rank_error_score": trial.get("rank_error_score"),
+                    "rank_stddev_by_year": trial.get("rank_stddev_by_year", {}),
+                    "rank_error_by_year": trial.get("rank_error_by_year", {}),
                     "cluster_R2": cluster_r2,
                     "full_predict_R2": full_predict_r2,
                     "cluster_better_than_predict": cluster_r2 > full_predict_r2
@@ -69,7 +84,6 @@ class TunerLogRanker:
                 "summary_metrics": summary
             })
 
-        # 결과 저장
         output = {
             "average_R2_by_n_clusters": average_r2_by_nclusters,
             "ranked_trials": ranked
@@ -78,4 +92,4 @@ class TunerLogRanker:
         with open(self.output_path, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2)
 
-        print(f"[완료] 전체 로그 기반 평균 R² + 등장 횟수 포함 Top {top_k} trial 저장됨 → {self.output_path}")
+        print(f"[완료] 전체 로그 기반 평균 R² + 표준편차 기반 Top {top_k} trial 저장됨 → {self.output_path}")

@@ -1,1 +1,191 @@
-[]
+{
+  "average_R2_by_n_clusters": {
+    "2": "0.9059 (n=127)",
+    "3": "0.8602 (n=139)",
+    "4": "0.7913 (n=121)",
+    "5": "0.8335 (n=159)"
+  },
+  "ranked_trials": [
+    {
+      "rank": 1,
+      "timestamp": "2025-07-15T18:28:49.214642",
+      "n_clusters": 2,
+      "score_keys": {
+        "mean_rank_stddev": 99.17394142085983,
+        "rank_error_score": 11664116,
+        "rank_stddev_by_year": {
+          "2014": 62.95646460837965,
+          "2015": 72.76026082660478,
+          "2016": 96.33779865980581,
+          "2017": 146.33946034587186,
+          "2018": 77.85895148620108,
+          "2019": 114.51596504418063,
+          "2020": 115.53612222518828,
+          "2021": 114.23278377457538,
+          "2022": 99.51575582351403,
+          "2023": 99.94280297152399,
+          "2024": 90.91698986361276
+        },
+        "rank_error_by_year": {
+          "2014": 353481,
+          "2015": 405882,
+          "2016": 606773,
+          "2017": 1329954,
+          "2018": 301682,
+          "2019": 1896074,
+          "2020": 1701808,
+          "2021": 1792792,
+          "2022": 1138500,
+          "2023": 1157084,
+          "2024": 980086
+        },
+        "cluster_R2": 0.9644377256828658,
+        "full_predict_R2": 0.8972490580883844,
+        "cluster_better_than_predict": true
+      },
+      "cluster_params": {
+        "full": {
+          "n_estimators": 226,
+          "max_depth": 30,
+          "min_samples_split": 5,
+          "min_samples_leaf": 9,
+          "max_features": "sqrt",
+          "random_state": 42,
+          "n_jobs": -1
+        },
+        "0": {
+          "n_estimators": 566,
+          "max_depth": 20,
+          "min_samples_split": 3,
+          "min_samples_leaf": 8,
+          "max_features": "sqrt",
+          "random_state": 42,
+          "n_jobs": -1
+        },
+        "1": {
+          "n_estimators": 810,
+          "max_depth": 8,
+          "min_samples_split": 17,
+          "min_samples_leaf": 8,
+          "random_state": 42,
+          "n_jobs": -1
+        }
+      },
+      "summary_metrics": {
+        "full_model": {
+          "RMSE": 4.640374886440056,
+          "MAE": 3.3653141858597047,
+          "R2": 0.8566985689993998
+        },
+        "cluster_test": {
+          "RMSE": 2.288411485826525,
+          "MAE": 1.114398766669605,
+          "R2": 0.9644377256828658
+        },
+        "full_predict": {
+          "RMSE": 3.889844684005107,
+          "MAE": 2.8363202500485425,
+          "R2": 0.8972490580883844
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "timestamp": "2025-07-15T18:28:14.581219",
+      "n_clusters": 4,
+      "score_keys": {
+        "mean_rank_stddev": 100.89705805960334,
+        "rank_error_score": 13357912,
+        "rank_stddev_by_year": {
+          "2014": 80.03961497532283,
+          "2015": 93.29834000084662,
+          "2016": 87.2087171073292,
+          "2017": 14.945244712154192,
+          "2018": 84.46936891982966,
+          "2019": 131.0718871444574,
+          "2020": 131.97210661938243,
+          "2021": 129.43699775909857,
+          "2022": 127.43343997991823,
+          "2023": 112.66425169654146,
+          "2024": 117.32766974075612
+        },
+        "rank_error_by_year": {
+          "2014": 456545,
+          "2015": 621020,
+          "2016": 512751,
+          "2017": 96349,
+          "2018": 358705,
+          "2019": 2447721,
+          "2020": 2191487,
+          "2021": 2127817,
+          "2022": 1709426,
+          "2023": 1372261,
+          "2024": 1463830
+        },
+        "cluster_R2": 0.9511402249450803,
+        "full_predict_R2": 0.9515394276286341,
+        "cluster_better_than_predict": false
+      },
+      "cluster_params": {
+        "full": {
+          "n_estimators": 113,
+          "max_depth": 15,
+          "min_samples_split": 18,
+          "min_samples_leaf": 1,
+          "max_features": "sqrt",
+          "random_state": 42,
+          "n_jobs": -1
+        },
+        "0": {
+          "n_estimators": 896,
+          "max_depth": 21,
+          "min_samples_split": 2,
+          "min_samples_leaf": 2,
+          "random_state": 42,
+          "n_jobs": -1
+        },
+        "1": {
+          "n_estimators": 549,
+          "max_depth": 30,
+          "min_samples_split": 7,
+          "min_samples_leaf": 4,
+          "random_state": 42,
+          "n_jobs": -1
+        },
+        "2": {
+          "n_estimators": 843,
+          "max_depth": 30,
+          "min_samples_split": 19,
+          "min_samples_leaf": 10,
+          "random_state": 42,
+          "n_jobs": -1
+        },
+        "3": {
+          "n_estimators": 364,
+          "max_depth": 4,
+          "min_samples_split": 9,
+          "min_samples_leaf": 6,
+          "random_state": 42,
+          "n_jobs": -1
+        }
+      },
+      "summary_metrics": {
+        "full_model": {
+          "RMSE": 3.3938395706021742,
+          "MAE": 2.4245418712791706,
+          "R2": 0.923347378915508
+        },
+        "cluster_test": {
+          "RMSE": 2.6823477861659515,
+          "MAE": 1.4283424383029464,
+          "R2": 0.9511402249450803
+        },
+        "full_predict": {
+          "RMSE": 2.671367418116989,
+          "MAE": 1.9306929193302516,
+          "R2": 0.9515394276286341
+        }
+      }
+    }
+  ]
+}

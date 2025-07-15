@@ -1,6 +1,6 @@
 {
   "n_clusters": {
-    "range": [2, 6],
+    "range": [2, 5],
     "type": "int"
   },
   "n_estimators": {

@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core_utiles.config_loader import ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN
+from core_utiles.config_loader import ORACLE_USER
 from core_utiles.OracleDBConnection import OracleDBConnection
 from EstimationFlow.SCRTableBuilder import SCRTableBuilder
 from EstimationFlow.SCRTableUpdater import SCRTableUpdater

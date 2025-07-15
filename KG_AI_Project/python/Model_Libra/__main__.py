@@ -26,9 +26,9 @@ execution_order = [
     "DataHandling",
     "DBHandling",
     "ML_RFR",
-    "EstimationFlow",
-    "ML_XGB",
-    "EstimationFuture"
+    "EstimationFlow"
+    # "ML_XGB",
+    # "EstimationFuture"
 ]
 
 # 실행 루프
