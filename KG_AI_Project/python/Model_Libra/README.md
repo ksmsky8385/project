@@ -98,14 +98,15 @@ Model_Libra/
 │   ├── predictor.py <- 학습된 모델 불러와서 예측 수행 클래스  
 │   └── trainer.py <- 모델 학습 로직 및 하이퍼파라미터 설정 클래스  
 │  
-├── Tuner_RFR/ <- XGBoost 회귀 머신러닝 모델 패키지  
-│  
+├── Tuner_RFR/ <- RFR 모델 튜닝 패키지
+│   │  
 │   ├── __init__.py  
 │   ├── __main__.py <- tuner 패키지 실행  
 │   ├── configmanager.py <- 모델 패키지의 컨피그값 수정 클래스  
-│   ├── tuner_log.json <- 튜닝 로그 기록파일  
-│   ├── toprating.json <- 로그파일 중 상위 점수 모델 기록파일  
+│   ├── rankevaluator.py <- 튜닝 사이클 별 점수 부여 클래스  
 │   ├── searchspace.json <- 하이퍼 파라미터 튜닝 범위 설정값 파일  
+│   ├── toprating.json <- 로그파일 중 상위 점수 모델 기록파일  
+│   ├── tuner_log.json <- 튜닝 로그 기록파일  
 │   ├── tunercontroller.py <- 튜너 패키지 파이프라인 클래스  
 │   ├── tunerengine.py <- 튜닝 로직 클래스  
 │   ├── tunerlogger.py <- 튜닝 사이클 로그에 기록 클래스  

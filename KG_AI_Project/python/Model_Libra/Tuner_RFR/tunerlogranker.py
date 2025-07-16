@@ -30,15 +30,32 @@ class TunerLogRanker:
         for trial in logs:
             n_clusters = trial.get("n_clusters")
             cluster_r2 = trial.get("summary_metrics", {}).get("cluster_test", {}).get("R2", None)
-            if cluster_r2 is not None and n_clusters is not None:
+            full_r2 = trial.get("summary_metrics", {}).get("full_predict", {}).get("R2", None)
+
+            # 조건 필터링: 클러스터와 full R²가 모두 0.8 이상인 경우만 포함
+            if (cluster_r2 is not None and full_r2 is not None and
+                cluster_r2 >= 0.8 and full_r2 >= 0.8 and n_clusters is not None):
                 r2_map[n_clusters].append(cluster_r2)
                 cluster_count[n_clusters] += 1
+            else:
+                continue  # 조건 미달 trial은 제외
 
         # 평균 + 횟수 붙여서 문자열화
         average_r2_by_nclusters = {
             str(k): f"{round(statistics.mean(r2_map[k]), 4)} (n={cluster_count[k]})"
             for k in sorted(r2_map.keys())
         }
+
+        # 필터링된 trial 재추출
+        filtered_trials = [
+            trial for trial in logs
+            if trial.get("summary_metrics", {}).get("cluster_test", {}).get("R2", -1) >= 0.8 and
+                trial.get("summary_metrics", {}).get("full_predict", {}).get("R2", -1) >= 0.8
+        ]
+
+        if not filtered_trials:
+            print("[실패] 조건을 만족하는 trial이 없습니다.")
+            return
 
         # 복합 정렬 기준
         def sort_key(trial: Dict[str, Any]):
@@ -58,8 +75,8 @@ class TunerLogRanker:
                 -full_r2                 # full R2 높은 순
             )
 
-        # 상위 trial 추출
-        sorted_trials = sorted(logs, key=lambda x: sort_key(x))[:top_k]
+        # 랭킹 대상 trial 정렬 및 추출
+        sorted_trials = sorted(filtered_trials, key=lambda x: sort_key(x))[:top_k]
 
         ranked = []
         for idx, trial in enumerate(sorted_trials, start=1):
@@ -92,4 +109,5 @@ class TunerLogRanker:
         with open(self.output_path, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2)
 
-        print(f"[완료] 전체 로그 기반 평균 R² + 표준편차 기반 Top {top_k} trial 저장됨 → {self.output_path}")
+        print(f"[완료] 조건을 만족한 trial 중 Top {top_k} 랭킹 추출 완료 → {self.output_path}")
+

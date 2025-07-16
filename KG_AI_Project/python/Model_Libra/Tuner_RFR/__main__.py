@@ -21,7 +21,7 @@ if __name__ == "__main__":
             json.dump([], f, indent=2)
 
     # 튜닝 수행
-    controller = TunerController(n_trials=5)
+    controller = TunerController(n_trials=1)
     save_interval: int = 2
     top_k = 2
     controller.run(save_interval, top_k)
@@ -31,4 +31,4 @@ if __name__ == "__main__":
         log_path=log_path,
         output_path=output_path
     )
-    ranker.rank_top_trials(top_k=2)
+    ranker.rank_top_trials(top_k=5)
