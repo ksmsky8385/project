@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from ML_XGB.utils.evaluator import Evaluator
+from ML_XGB.utiles.evaluator import Evaluator
 
 class ModelTrainer:
     def __init__(self, model):

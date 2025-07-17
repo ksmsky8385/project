@@ -4,7 +4,7 @@ from ML_XGB.cleaner import DataCleaner
 from ML_XGB.model import XGBModel
 from ML_XGB.trainer import ModelTrainer
 from ML_XGB.predictor import XGBPredictor
-from ML_XGB.utils.exporter import save_model
+from ML_XGB.utiles.exporter import save_model
 from core_utiles.config_loader import ORACLE_CLIENT_PATH, MODEL_NUM02_SAVE_PATH
 from core_utiles.OracleDBConnection import OracleDBConnection
 import oracledb

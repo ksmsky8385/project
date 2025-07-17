@@ -1,5 +1,5 @@
 from ML_XGB.config import Config
-from ML_XGB.utils.validator import validate_columns
+from ML_XGB.utiles.validator import validate_columns
 import pandas as pd
 
 class XGBPredictor:

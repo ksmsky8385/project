@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from joblib import load
 from ML_RFR.cleaner import DataCleaner
-from ML_RFR.utils.validator import validate_columns
-from ML_RFR.utils.evaluator import evaluate_metrics
+from ML_RFR.utiles.validator import validate_columns
+from ML_RFR.utiles.evaluator import evaluate_metrics
 
 class ModelPredictor:
     def __init__(self, model=None, conn=None, input_cols=None,

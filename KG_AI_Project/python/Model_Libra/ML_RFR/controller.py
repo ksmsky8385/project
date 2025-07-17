@@ -7,7 +7,7 @@ from ML_RFR.handler import DataHandler
 from ML_RFR.cleaner import DataCleaner
 from ML_RFR.trainer import ModelTrainer
 from ML_RFR.predictor import ModelPredictor
-from ML_RFR.utils.exporter import save_model
+from ML_RFR.utiles.exporter import save_model
 
 class RFRPipelineController:
     def __init__(self, conn, oracle_client_path, rfr_save_path, config_path=None):

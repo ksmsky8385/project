@@ -338,7 +338,8 @@ D:\workspace\project\KG_AI_Project/db\LIBRA_DB.dbf
 
 KG_AI_Project/  
 │  
-├── backup <- 개발중 생성된 코드 백업본 저장소  
+├── \_note <- 커밋로그, 개발노트, 할일 노트 폴더  
+├── backup <- 개발중 생성된 코드 백업본 저장 폴더  
 ├── db <- 테이블스페이스 및 쿼리문 구성 폴더  
 ├── java <- 웹 및 서버 관련 자바 프로젝트 폴더  
 ├── python <- 머신러닝 파이썬 프로젝트 폴더  

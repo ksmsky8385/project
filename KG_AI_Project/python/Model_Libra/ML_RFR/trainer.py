@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
-from ML_RFR.utils.validator import validate_columns
-from ML_RFR.utils.evaluator import evaluate_metrics
+from ML_RFR.utiles.validator import validate_columns
+from ML_RFR.utiles.evaluator import evaluate_metrics
 from ML_RFR.model import RandomForestModel
 
 class ModelTrainer:
