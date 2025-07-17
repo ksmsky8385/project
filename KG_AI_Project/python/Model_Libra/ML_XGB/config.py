@@ -8,4 +8,4 @@ class Config:
 
     model_path = "ML_XGB/models/model_xgb_v1.0.pkl"
     TARGET_COLUMN = "SCR_EST"
-    ROLLING_WINDOW = 5
+    ROLLING_WINDOW = 3
