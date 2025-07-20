@@ -426,27 +426,6 @@ Model_Libra/
 │   ├── predictor.py <- 학습된 모델 불러와서 예측 수행 클래스  
 │   └── trainer.py <- 모델 학습 학습 로직 설정 클래스  
 │  
-├── ML_XGB/ <- XGBoost 회귀 머신러닝 모델 패키지(수정중)  
-│   │  
-│   ├── models/  
-│   │   └── .....pkl <- 모델 피클파일 (다수 생성가능)  
-│   │  
-│   ├── utils/   
-│   │   ├── __init__.py  
-│   │   ├── evaluator.py <- 회귀 예측 결과 평가 지표 계산 모듈 (RMSE)  
-│   │   ├── exporter.py <- 학습된 모델 및 스케일러 피클 익스포트 모듈  
-│   │   └── validator.py <- 입력/출력 데이터 유효성 검증 모듈  
-│   │  
-│   ├── __init__.py  
-│   ├── __main__.py <- ML_XGB 패키지 실행  
-│   ├── cleaner.py <- 학습 데이터 전처리 및 결측치 처리 클래스  
-│   ├── config.py <- 모델 설정값, 하이퍼파라미터 등 환경설정 클래스
-│   ├── controller.py <- 전체 파이프라인 흐름 제어 클래스  
-│   ├── fetcher.py <- DB에서 학습 데이터 추출 클래스  
-│   ├── model.py <- XGBoost 모델 생성 및 설정 클래스  
-│   ├── predictor.py <- 학습된 모델 로딩 및 예측 수행 클래스  
-│   └── trainer.py <- 모델 학습 클래스  
-│  
 ├── Tuner_RFR/ <- RFR 모델 튜닝 패키지
 │   │  
 │   ├── __init__.py  
@@ -657,6 +636,19 @@ web/
 |`BR_TCNT_OB`|국외 논문 종수|0.751 → 연구 자산 다양성|
 |`ER_TTL_PKG`|전자자료 패키지 총액|0.652 → 디지털 자료 접근성|
 |`STL_ERC_WDB`|웹DB 외부연구비|0.668 → DB 활용 규모|
+
+## 컨피그값 설정법
+
+- "MODEL_TYPE":
+	- "RandomForestRegressor" - 렌덤포레스트리그레션
+	- ""
+- "TABLE_TYPE":
+	- "CSV" - CSV파일 불러오기 - 파일경로 설정 필수
+	- "DB" - DB에서 테이블 불러오기 - 테이블명 설정 필수
+- "SORT_COLUMNS":
+	- "컬럼명":
+		- "ASC" - 오름차순
+		- "DESC" - 내림차순
 
 ## 튜너 개발
 

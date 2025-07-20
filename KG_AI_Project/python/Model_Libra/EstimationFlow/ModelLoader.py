@@ -6,7 +6,7 @@ from core_utiles.config_loader import RFR_SAVE_PATH
 class ModelLoader:
     def __init__(self, path=RFR_SAVE_PATH):
         self.path = path
-        self.config_path = os.path.join(os.path.dirname(__file__), "..", "ML_RFR/config.json")
+        self.config_path = os.path.join(os.path.dirname(__file__), "..", "Configs/Num01_Config_RFR.json")
         self.models = {}
 
     def load_config(self):

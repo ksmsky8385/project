@@ -1,14 +1,14 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+env_path = os.path.join(os.path.dirname(__file__), "..", "_Configs", ".env")
+load_dotenv(dotenv_path=env_path)
+
 
 ORACLE_USER         = os.getenv("ORACLE_USER")
 ORACLE_PASSWORD     = os.getenv("ORACLE_PASSWORD")
 ORACLE_DSN          = os.getenv("ORACLE_DSN")
 ORACLE_CLIENT_PATH  = os.getenv("ORACLE_CLIENT_PATH")
-
-
 
 BASE_RAW_DIR        = os.getenv("BASE_RAW_DIR")
 BASE_CSV_DIR        = os.getenv("BASE_CSV_DIR")
@@ -32,7 +32,10 @@ CSV_NUM09_PREFIX = os.getenv("CSV_NUM09_PREFIX")
 RFR_CONFIG_PATH = os.getenv("RFR_CONFIG_PATH")
 RFR_METRICS_PATH = os.getenv("RFR_METRICS_PATH")
 
-RAW_DATA_RANGE      = os.getenv("RAW_DATA_RANGE")
+MODEL_SAVE_PATH = os.getenv("MODEL_SAVE_PATH")
+LOG_SAVE_PATH = os.getenv("LOG_SAVE_PATH")
+
+RAW_DATA_RANGE = os.getenv("RAW_DATA_RANGE")
 
 def get_raw_years() -> list[int]:
     try:
