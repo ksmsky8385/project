@@ -1,11 +1,12 @@
-// 환경점수예측 분석 스크립트 (수정됨)
-// 파일명: environment_analysis.js
+// 환경점수예측 분석 스크립트 (예측데이터총합.csv 사용)
+// 파일명: script_chartpage_num01.js
 
 // 전역 변수
 let csvData = null;
 let currentChart = null;
 let chartData = null;
-let currentYear = '2024';
+let currentYear = null;
+let availableYears = [];
 
 // 차트 색상 팔레트
 const CHART_COLORS = [
@@ -25,8 +26,8 @@ const CHART_TYPE_NAMES = {
 
 // 정렬 방식별 한글명
 const SORT_ORDER_NAMES = {
-    'rank_asc': '환경점수 순위 오름차순',
-    'rank_desc': '환경점수 순위 내림차순',
+    'rank_asc': '환경점수 낮은 순',
+    'rank_desc': '환경점수 높은 순',
     'university': '대학명 가나다순'
 };
 
@@ -38,13 +39,13 @@ const Y_AXIS_MODE_NAMES = {
     'enhanced': '향상된 표시'
 };
 
-// CSV 파일 로드 (수정된 경로)
-async function loadCSVData(year) {
+// CSV 파일 로드 (예측데이터총합.csv)
+async function loadCSVData() {
     try {
-        console.log(`${year}년 CSV 파일 로딩 중...`);
+        console.log('예측데이터총합.csv 파일 로딩 중...');
         
-        // 수정된 CSV 파일 경로
-        const csvPath = `../../resource/csv_files/csv_data/Num08_환경점수예측_${year}.csv`;
+        // 단일 CSV 파일 경로
+        const csvPath = `../../resource/csv_files/예측데이터총합.csv`;
         
         const response = await fetch(csvPath);
         if (!response.ok) {
@@ -55,10 +56,12 @@ async function loadCSVData(year) {
         
         // CSV 파싱
         csvData = parseCSV(csvText);
-        currentYear = year;
         
-        console.log(`${year}년 CSV 데이터 로드 완료:`, csvData.length, '행');
+        console.log('CSV 데이터 로드 완료:', csvData.length, '행');
         console.log('컬럼명:', Object.keys(csvData[0] || {}));
+        
+        // 사용 가능한 연도 추출
+        extractAvailableYears();
         
         // 데이터 검증
         const validation = validateData(csvData);
@@ -66,11 +69,64 @@ async function loadCSVData(year) {
             throw new Error(validation.message);
         }
         
+        // 연도 셀렉트 박스 초기화
+        initializeYearSelect();
+        
         return csvData;
     } catch (error) {
         console.error('CSV 로드 실패:', error);
-        showError(`${year}년 CSV 파일을 불러올 수 없습니다: ${error.message}`);
+        showError(`예측데이터총합.csv 파일을 불러올 수 없습니다: ${error.message}`);
         return null;
+    }
+}
+
+// 사용 가능한 연도 추출 (동적 범위 감지)
+function extractAvailableYears() {
+    if (!csvData || csvData.length === 0) return;
+    
+    const firstRow = csvData[0];
+    availableYears = [];
+    
+    // SCR_EST_YYYY 형태의 컬럼명에서 연도 추출 (범위 제한 없이)
+    Object.keys(firstRow).forEach(key => {
+        const match = key.match(/^SCR_EST_(\d{4})$/);
+        if (match) {
+            const year = parseInt(match[1]);
+            // 연도가 4자리 숫자이고 합리적인 범위 내에 있으면 추가
+            if (year >= 1900 && year <= 2100) {
+                availableYears.push(year);
+            }
+        }
+    });
+    
+    // 연도 정렬 (내림차순 - 최신 연도부터)
+    availableYears.sort((a, b) => b - a);
+    
+    console.log('CSV에서 감지된 사용 가능한 연도:', availableYears);
+    console.log('연도 범위:', availableYears.length > 0 ? `${Math.min(...availableYears)} ~ ${Math.max(...availableYears)}` : '없음');
+}
+
+// 연도 셀렉트 박스 초기화
+function initializeYearSelect() {
+    const yearSelect = document.getElementById('yearSelect');
+    if (!yearSelect) return;
+    
+    // 기존 옵션 제거
+    yearSelect.innerHTML = '';
+    
+    // 사용 가능한 연도로 옵션 추가
+    availableYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = `${year}년`;
+        yearSelect.appendChild(option);
+    });
+    
+    // 기본값을 가장 최신 연도로 설정
+    if (availableYears.length > 0) {
+        currentYear = availableYears[0];
+        yearSelect.value = currentYear;
+        updateCurrentInfo();
     }
 }
 
@@ -125,7 +181,7 @@ function parseCSVLine(line) {
     return result.map(val => val.replace(/"/g, ''));
 }
 
-// **핵심 수정: generateChart 함수 정의**
+// **핵심: generateChart 함수 정의**
 function generateChart() {
     console.log('차트 생성 함수 호출됨');
     generateChartFromCSV();
@@ -133,18 +189,19 @@ function generateChart() {
 
 // CSV 데이터로 차트 생성 (수정됨)
 async function generateChartFromCSV() {
-    const year = document.getElementById('yearSelect').value;
-    
-    // 연도가 변경되었거나 데이터가 없으면 다시 로드
-    if (!csvData || currentYear !== year) {
+    // CSV 데이터가 없으면 먼저 로드
+    if (!csvData) {
         showLoading();
-        await loadCSVData(year);
+        await loadCSVData();
         if (!csvData) {
             hideLoading();
             return;
         }
         hideLoading();
     }
+    
+    const year = document.getElementById('yearSelect').value;
+    currentYear = year;
     
     const chartTypeSelect = document.getElementById('chartType');
     const dataRangeSelect = document.getElementById('dataRange');
@@ -158,8 +215,8 @@ async function generateChartFromCSV() {
     showLoading();
     
     try {
-        // 데이터 처리 (수정된 함수 사용)
-        const processedData = processCSVDataForChart(csvData, dataRange);
+        // 데이터 처리 (연도별 컬럼 사용)
+        const processedData = processCSVDataForChart(csvData, year, dataRange);
         
         if (processedData && processedData.length > 0) {
             // 차트 생성
@@ -170,7 +227,6 @@ async function generateChartFromCSV() {
             const stats = calculateStatistics(processedData);
             if (stats) {
                 console.log('통계 정보:', stats);
-                // 최고점과 최저점 정보 표시
                 console.log(`점수 범위: ${stats.min}점 ~ ${stats.max}점`);
             }
             
@@ -187,11 +243,15 @@ async function generateChartFromCSV() {
     }
 }
 
-// CSV 데이터 처리 (수정됨 - 전체 순위 정보 개선)
-function processCSVDataForChart(data, dataRangeType) {
-    // 1단계: 유효한 데이터만 필터링 (SCR_EST가 타겟값)
+// CSV 데이터 처리 (연도별 컬럼 사용하도록 수정)
+function processCSVDataForChart(data, selectedYear, dataRangeType) {
+    // 1단계: 선택된 연도의 점수 컬럼명 생성
+    const scoreColumn = `SCR_EST_${selectedYear}`;
+    console.log(`선택된 연도: ${selectedYear}, 점수 컬럼: ${scoreColumn}`);
+    
+    // 2단계: 유효한 데이터만 필터링 (선택된 연도의 점수가 있는 데이터)
     let validData = data.filter(row => {
-        const scoreValue = row['SCR_EST'];
+        const scoreValue = row[scoreColumn];
         return scoreValue !== null && 
                scoreValue !== undefined && 
                scoreValue !== '' &&
@@ -204,23 +264,23 @@ function processCSVDataForChart(data, dataRangeType) {
 
     // 전체 데이터를 점수 기준으로 정렬하여 전역 변수에 저장 (전체 순위 계산용)
     globalSortedData = [...validData].sort((a, b) => {
-        const scoreA = parseFloat(a['SCR_EST']) || 0;
-        const scoreB = parseFloat(b['SCR_EST']) || 0;
+        const scoreA = parseFloat(a[scoreColumn]) || 0;
+        const scoreB = parseFloat(b[scoreColumn]) || 0;
         return scoreB - scoreA; // 높은 점수부터 정렬
     });
 
-    // 2단계: 필터 적용 (범위 선택 전에 먼저 적용)
+    // 3단계: 필터 적용 (범위 선택 전에 먼저 적용)
     let filteredData = applyFilters(validData);
     console.log('필터 적용 후 데이터 수:', filteredData.length);
 
-    // 3단계: 필터링된 데이터를 점수 기준으로 정렬 (높은 점수부터)
+    // 4단계: 필터링된 데이터를 점수 기준으로 정렬 (높은 점수부터)
     filteredData.sort((a, b) => {
-        const scoreA = parseFloat(a['SCR_EST']) || 0;
-        const scoreB = parseFloat(b['SCR_EST']) || 0;
+        const scoreA = parseFloat(a[scoreColumn]) || 0;
+        const scoreB = parseFloat(b[scoreColumn]) || 0;
         return scoreB - scoreA; // 높은 점수부터 정렬
     });
 
-    // 4단계: 데이터 범위에 따라 선택
+    // 5단계: 데이터 범위에 따라 선택
     let selectedData = [];
     const topBottomCount = parseInt(document.getElementById('topBottomCount')?.value) || 10;
     const rangeStart = parseInt(document.getElementById('rangeStart')?.value) || 1;
@@ -266,30 +326,33 @@ function processCSVDataForChart(data, dataRangeType) {
 
     console.log('최종 선택된 데이터 수:', selectedData.length);
 
-    // 5단계: 사용자가 선택한 정렬 방식 적용
+    // 6단계: 사용자가 선택한 정렬 방식 적용
     const sortOrder = document.getElementById('sortOrder').value;
-    applySorting(selectedData, sortOrder);
+    applySorting(selectedData, sortOrder, scoreColumn);
 
-    // 6단계: 차트용 데이터 변환
-    return selectedData.map((row, index) => ({
-        university: row['SNM'] || 'Unknown',
-        value: parseFloat(row['SCR_EST']) || 0,
-        styp: row['STYP'] || '',
-        fnd: row['FND'] || '',
-        rgn: row['RGN'] || '',
-        usc: row['USC'] || '',
-        rank: index + 1, // 현재 순위
-        originalRank: getOriginalRank(row, globalSortedData), // 전체에서의 원래 순위
-        label: `${row['SNM']} (점수: ${row['SCR_EST']}, 전체 ${getOriginalRank(row, globalSortedData)}위)`
-    }));
+    // 7단계: 차트용 데이터 변환 (동적 순위 계산)
+    return selectedData.map((row, index) => {
+        const score = parseFloat(row[scoreColumn]) || 0;
+        return {
+            university: row['SNM'] || 'Unknown',
+            value: score,
+            styp: row['STYP'] || '',
+            fnd: row['FND'] || '',
+            rgn: row['RGN'] || '',
+            usc: row['USC'] || '',
+            rank: index + 1, // 현재 순위
+            originalRank: getOriginalRank(row, globalSortedData, scoreColumn), // 전체에서의 원래 순위
+            label: `${row['SNM']} (점수: ${score}, 전체 ${getOriginalRank(row, globalSortedData, scoreColumn)}위)`
+        };
+    });
 }
 
 // 전체 데이터에서의 원래 순위 구하기 (수정됨)
-function getOriginalRank(targetRow, allSortedData) {
+function getOriginalRank(targetRow, allSortedData, scoreColumn) {
     // 전체 데이터에서 동일한 학교 찾기
     for (let i = 0; i < allSortedData.length; i++) {
         if (allSortedData[i]['SNM'] === targetRow['SNM'] && 
-            Math.abs(parseFloat(allSortedData[i]['SCR_EST']) - parseFloat(targetRow['SCR_EST'])) < 0.01) {
+            Math.abs(parseFloat(allSortedData[i][scoreColumn]) - parseFloat(targetRow[scoreColumn])) < 0.01) {
             return i + 1;
         }
     }
@@ -337,14 +400,14 @@ function applyFilters(data) {
     });
 }
 
-// 정렬 적용 함수 (SCR_EST 기준으로 수정)
-function applySorting(data, sortOrder) {
+// 정렬 적용 함수 (연도별 점수 컬럼 사용)
+function applySorting(data, sortOrder, scoreColumn) {
     switch(sortOrder) {
         case 'rank_asc':
             // 환경점수 오름차순 (낮은 점수부터)
             data.sort((a, b) => {
-                const scoreA = parseFloat(a['SCR_EST']) || 0;
-                const scoreB = parseFloat(b['SCR_EST']) || 0;
+                const scoreA = parseFloat(a[scoreColumn]) || 0;
+                const scoreB = parseFloat(b[scoreColumn]) || 0;
                 return scoreA - scoreB;
             });
             break;
@@ -352,8 +415,8 @@ function applySorting(data, sortOrder) {
         case 'rank_desc':
             // 환경점수 내림차순 (높은 점수부터)
             data.sort((a, b) => {
-                const scoreA = parseFloat(a['SCR_EST']) || 0;
-                const scoreB = parseFloat(b['SCR_EST']) || 0;
+                const scoreA = parseFloat(a[scoreColumn]) || 0;
+                const scoreB = parseFloat(b[scoreColumn]) || 0;
                 return scoreB - scoreA;
             });
             break;
@@ -461,7 +524,7 @@ function onCustomRangeChange() {
     }
 }
 
-// Chart.js를 사용한 차트 생성 (SCR_EST 기준으로 수정)
+// Chart.js를 사용한 차트 생성
 function createChart(data, chartType) {
     const ctx = document.getElementById('mainChart').getContext('2d');
     
@@ -641,13 +704,13 @@ function updateChartWithAverageData() {
     createChart(avgData, chartType);
 }
 
-// 데이터 검증 함수 (SCR_EST 포함)
+// 데이터 검증 함수 (연도별 컬럼 확인)
 function validateData(data) {
     if (!data || data.length === 0) {
         return { valid: false, message: '데이터가 없습니다.' };
     }
     
-    const requiredColumns = ['SNM', 'SCR_EST', 'STYP', 'FND', 'RGN', 'USC'];
+    const requiredColumns = ['SNM', 'STYP', 'FND', 'RGN', 'USC'];
     const availableColumns = Object.keys(data[0] || {});
     
     console.log('사용 가능한 컬럼:', availableColumns);
@@ -658,6 +721,15 @@ function validateData(data) {
         return { 
             valid: false, 
             message: `필수 컬럼이 누락되었습니다: ${missingColumns.join(', ')}` 
+        };
+    }
+    
+    // 연도별 점수 컬럼이 하나 이상 있는지 확인
+    const scoreColumns = availableColumns.filter(col => col.match(/^SCR_EST_\d{4}$/));
+    if (scoreColumns.length === 0) {
+        return {
+            valid: false,
+            message: 'SCR_EST_YYYY 형태의 점수 컬럼이 없습니다.'
         };
     }
     
@@ -689,12 +761,11 @@ function navigateTo(page) {
     }
 }
 
-async function onYearChange() {
+function onYearChange() {
     const year = document.getElementById('yearSelect').value;
     console.log('연도 변경:', year);
+    currentYear = year;
     
-    // 새 연도 데이터 로드
-    await loadCSVData(year);
     updateCurrentInfo();
     
     // 차트가 있다면 새로운 연도로 다시 생성
@@ -814,7 +885,11 @@ function switchTab(tabName) {
 }
 
 function updateCurrentInfo() {
-    document.getElementById('currentYear').textContent = document.getElementById('yearSelect').value + '년';
+    const yearElement = document.getElementById('currentYear');
+    if (yearElement) {
+        yearElement.textContent = currentYear ? `${currentYear}년` : '-';
+    }
+    
     document.getElementById('currentStyp').textContent = document.getElementById('stypFilter').value;
     document.getElementById('currentFnd').textContent = document.getElementById('fndFilter').value;
     document.getElementById('currentRgn').textContent = document.getElementById('rgnFilter').value;
@@ -852,7 +927,7 @@ function showError(message) {
             <h3>오류 발생</h3>
             <p>${message}</p>
             <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                파일 경로를 확인하세요: /resource/csv_files/csv_data/Num08_환경점수예측_${currentYear}.csv
+                파일 경로를 확인하세요: ../../resource/csv_files/예측데이터총합.csv
             </p>
         </div>
     `;
@@ -872,7 +947,7 @@ function exportChart() {
         
         const a = document.createElement('a');
         a.href = url;
-        const year = document.getElementById('yearSelect').value;
+        const year = currentYear || 'unknown';
         const filters = `${document.getElementById('stypFilter').value}_${document.getElementById('fndFilter').value}_${document.getElementById('rgnFilter').value}_${document.getElementById('uscFilter').value}`;
         a.download = `libra_environment_chart_${year}_${filters}_${new Date().getTime()}.png`;
         document.body.appendChild(a);
@@ -888,7 +963,7 @@ function exportChart() {
 
 function saveAnalysis() {
     const currentConfig = {
-        year: document.getElementById('yearSelect').value,
+        year: currentYear || 'unknown',
         styp: document.getElementById('stypFilter').value,
         fnd: document.getElementById('fndFilter').value,
         rgn: document.getElementById('rgnFilter').value,
@@ -933,10 +1008,9 @@ function calculateStatistics(data) {
 // 페이지 초기화
 function initializePage() {
     console.log('환경점수예측 분석 페이지 초기화');
-    updateCurrentInfo();
     
-    // 기본 연도 CSV 데이터 로드
-    loadCSVData('2024');
+    // 기본 CSV 데이터 로드
+    loadCSVData();
     
     // 이벤트 리스너 등록
     setupEventListeners();
@@ -954,7 +1028,7 @@ function setupEventListeners() {
 function saveFilterState() {
     try {
         const filterState = {
-            year: document.getElementById('yearSelect')?.value || '2024',
+            year: currentYear || 'unknown',
             styp: document.getElementById('stypFilter')?.value || '전체',
             fnd: document.getElementById('fndFilter')?.value || '전체',
             rgn: document.getElementById('rgnFilter')?.value || '전체',
@@ -982,9 +1056,20 @@ function restoreFilterState() {
         try {
             const filterState = JSON.parse(savedState);
             
+            // 연도는 사용 가능한 연도 중에서만 선택
+            if (filterState.year && availableYears.includes(parseInt(filterState.year))) {
+                currentYear = filterState.year;
+                const yearSelect = document.getElementById('yearSelect');
+                if (yearSelect) {
+                    yearSelect.value = filterState.year;
+                }
+            }
+            
+            // 나머지 필터 상태 복원
             Object.keys(filterState).forEach(key => {
-                const elementId = key === 'year' ? 'yearSelect' : 
-                                key === 'chartType' ? 'chartType' : 
+                if (key === 'year') return; // 연도는 이미 처리함
+                
+                const elementId = key === 'chartType' ? 'chartType' : 
                                 key === 'sortOrder' ? 'sortOrder' : 
                                 key === 'dataRange' ? 'dataRange' : 
                                 key === 'topBottomCount' ? 'topBottomCount' :
@@ -1038,7 +1123,12 @@ document.addEventListener('keydown', function(event) {
 // 페이지 로드 완료 시 초기화
 window.addEventListener('load', function() {
     initializePage();
-    restoreFilterState();
+    
+    // CSV 로드 완료 후 필터 상태 복원
+    setTimeout(() => {
+        restoreFilterState();
+        updateCurrentInfo();
+    }, 500);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1064,6 +1154,7 @@ window.addEventListener('beforeunload', function() {
 function debugInfo() {
     console.log('=== 디버깅 정보 ===');
     console.log('현재 연도:', currentYear);
+    console.log('사용 가능한 연도:', availableYears);
     console.log('CSV 데이터:', csvData ? csvData.length + '행' : '없음');
     console.log('차트 데이터:', chartData ? chartData.length + '개' : '없음');
     console.log('현재 차트:', currentChart ? '있음' : '없음');
@@ -1072,14 +1163,21 @@ function debugInfo() {
         console.log('컬럼명:', Object.keys(csvData[0]));
         console.log('첫 번째 행:', csvData[0]);
         
-        // SCR_EST 컬럼 확인
-        const scrEstValues = csvData.slice(0, 5).map(row => row['SCR_EST']);
-        console.log('SCR_EST 샘플 값들:', scrEstValues);
+        // 점수 컬럼들 확인
+        const scoreColumns = Object.keys(csvData[0]).filter(key => key.match(/^SCR_EST_\d{4}$/));
+        console.log('점수 컬럼들:', scoreColumns);
+        
+        // 현재 연도 점수 샘플 값들
+        if (currentYear) {
+            const currentScoreColumn = `SCR_EST_${currentYear}`;
+            const scoreValues = csvData.slice(0, 5).map(row => row[currentScoreColumn]);
+            console.log(`${currentScoreColumn} 샘플 값들:`, scoreValues);
+        }
     }
     
     // 현재 필터 상태
     console.log('현재 필터 상태:', {
-        year: document.getElementById('yearSelect')?.value,
+        year: currentYear,
         styp: document.getElementById('stypFilter')?.value,
         fnd: document.getElementById('fndFilter')?.value,
         rgn: document.getElementById('rgnFilter')?.value,
@@ -1094,6 +1192,7 @@ window.libra = {
     chartData,
     currentChart,
     currentYear,
+    availableYears,
     generateChart,
     loadData: loadCSVData,
     debugInfo,
@@ -1113,5 +1212,80 @@ window.libra = {
                 console.log(`${key}:`, sampleValues);
             });
         }
+    },
+    testYearColumn: function(year) {
+        if (csvData && year) {
+            const scoreColumn = `SCR_EST_${year}`;
+            console.log(`${scoreColumn} 테스트:`);
+            const validData = csvData.filter(row => {
+                const score = row[scoreColumn];
+                return score !== null && score !== undefined && score !== '' && !isNaN(parseFloat(score));
+            });
+            console.log(`유효한 데이터 수: ${validData.length}개`);
+            if (validData.length > 0) {
+                const scores = validData.map(row => parseFloat(row[scoreColumn]));
+                console.log(`점수 범위: ${Math.min(...scores)} ~ ${Math.max(...scores)}`);
+            }
+        }
+    },
+    // 모든 연도별 데이터 현황 확인
+    checkAllYearData: function() {
+        if (!csvData || csvData.length === 0) {
+            console.log('CSV 데이터가 없습니다.');
+            return;
+        }
+        
+        console.log('=== 전체 연도별 데이터 현황 ===');
+        availableYears.forEach(year => {
+            const scoreColumn = `SCR_EST_${year}`;
+            const validCount = csvData.filter(row => {
+                const score = row[scoreColumn];
+                return score !== null && score !== undefined && score !== '' && !isNaN(parseFloat(score));
+            }).length;
+            
+            console.log(`${year}년: ${validCount}개 유효 데이터 (전체 ${csvData.length}개 중)`);
+        });
+        
+        // 빈 데이터가 있는 연도들 확인
+        const emptyYears = availableYears.filter(year => {
+            const scoreColumn = `SCR_EST_${year}`;
+            const validCount = csvData.filter(row => {
+                const score = row[scoreColumn];
+                return score !== null && score !== undefined && score !== '' && !isNaN(parseFloat(score));
+            }).length;
+            return validCount === 0;
+        });
+        
+        if (emptyYears.length > 0) {
+            console.warn('데이터가 없는 연도들:', emptyYears);
+        }
+    },
+    // CSV 컬럼 구조 상세 분석
+    analyzeCSVStructure: function() {
+        if (!csvData || csvData.length === 0) {
+            console.log('CSV 데이터가 없습니다.');
+            return;
+        }
+        
+        const firstRow = csvData[0];
+        const allColumns = Object.keys(firstRow);
+        
+        console.log('=== CSV 컬럼 구조 분석 ===');
+        console.log('총 컬럼 수:', allColumns.length);
+        
+        // 기본 정보 컬럼들
+        const basicColumns = allColumns.filter(col => !col.match(/^SCR_EST_\d{4}$/));
+        console.log('기본 정보 컬럼들:', basicColumns);
+        
+        // 점수 컬럼들 (연도별)
+        const scoreColumns = allColumns.filter(col => col.match(/^SCR_EST_\d{4}$/));
+        console.log('점수 컬럼들:', scoreColumns.sort());
+        
+        // 각 컬럼의 샘플 데이터
+        console.log('\n=== 컬럼별 샘플 데이터 ===');
+        allColumns.forEach(col => {
+            const sampleValues = csvData.slice(0, 3).map(row => row[col]);
+            console.log(`${col}:`, sampleValues);
+        });
     }
 };

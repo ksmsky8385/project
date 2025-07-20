@@ -240,6 +240,56 @@
             font-size: 14px;
             color: #666;
         }
+
+        /* 로딩 스피너 스타일 */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #42a5f5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .chart-loading {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        
+        .chart-placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+        }
+        
+        .placeholder-content {
+            text-align: center;
+            color: #666;
+        }
+        
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -286,6 +336,13 @@
                                 </div>
                                 <div class="selected-range" id="selectedYearRange">전체</div>
                             </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="showAverageCheckbox" checked onchange="onShowAverageChange()" style="margin-right: 8px;">
+                                평균값 그래프 표시
+                            </label>
                         </div>
                     </div>
 

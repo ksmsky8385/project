@@ -130,9 +130,9 @@
     },
       "EXPORT_CONFIG": {
         "DROP_ENABLE": true,
-        "REMAIN_COLS": ["YR","ID","SNM","STYP","FND","RGN","USC"],
+        "REMAIN_COLS": ["ID","SNM","STYP","FND","RGN","USC"],
         "DB_CONFIG": {
-        "TABLE_PREFIX": "ESTIMATIONFLOW"
+          "TABLE_PREFIX": "ESTIMATIONFLOW"
       },
       "CSV_CONFIG": {
         "FILE_PATH": "D:/workspace/project/KG_AI_Project/resource/csv_files",

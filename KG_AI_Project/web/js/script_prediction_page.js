@@ -1,4 +1,4 @@
-// 가능성 예측 페이지 스크립트
+// 가능성 예측 페이지 스크립트 (예측데이터총합.csv 사용)
 // 파일명: script_prediction_page.js
 
 // 전역 변수
@@ -11,6 +11,7 @@ let availableYears = [];
 let selectionMode = 'all'; // 'all' 또는 'manual'
 let selectedYearRange = { start: 0, end: 0 };
 let selectedDataRange = { start: 1, end: 1 };
+let showAverage = true; // 평균값 그래프 표시 여부
 
 // 차트 색상 팔레트
 const CHART_COLORS = {
@@ -21,12 +22,13 @@ const CHART_COLORS = {
     neutral: '#9e9e9e'
 };
 
-// CSV 파일 로드
+// CSV 파일 로드 (예측데이터총합.csv 사용)
 async function loadCSVData() {
     try {
-        console.log('가능성 예측 CSV 파일 로딩 중...');
+        console.log('예측데이터총합.csv 파일 로딩 중...');
         
-        const csvPath = '../../resource/csv_files/csv_data/NUM09_가능성예측.csv';
+        // 통합 CSV 파일 경로로 변경
+        const csvPath = '../../resource/csv_files/예측데이터총합.csv';
         
         const response = await fetch(csvPath);
         if (!response.ok) {
@@ -39,8 +41,9 @@ async function loadCSVData() {
         csvData = parseCSV(csvText);
         
         console.log('CSV 데이터 로드 완료:', csvData.length, '행');
+        console.log('컬럼명:', Object.keys(csvData[0] || {}));
         
-        // 연도 정보 추출
+        // 연도 정보 추출 (동적으로 모든 SCR_EST_YYYY 컬럼 감지)
         extractYears();
         
         // 필터 옵션 업데이트
@@ -53,6 +56,10 @@ async function loadCSVData() {
         selectedDataRange = { start: 1, end: Math.min(50, csvData.length) }; // 기본값: 처음 50개
         updateDataRangeSliders();
         
+        // 초기 필터 적용하여 대학 목록 준비
+        console.log('초기 필터 적용 중...');
+        applyFilters();
+        
         return csvData;
     } catch (error) {
         console.error('CSV 로드 실패:', error);
@@ -64,7 +71,12 @@ async function loadCSVData() {
 // CSV 파싱 함수
 function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
+    if (lines.length < 2) {
+        throw new Error('CSV 파일이 비어있거나 형식이 올바르지 않습니다.');
+    }
+    
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    console.log('발견된 헤더:', headers);
     
     const data = [];
     for (let i = 1; i < lines.length; i++) {
@@ -84,7 +96,7 @@ function parseCSV(csvText) {
     return data;
 }
 
-// CSV 라인 파싱
+// CSV 라인 파싱 (쉼표와 따옴표 처리)
 function parseCSVLine(line) {
     const result = [];
     let current = '';
@@ -107,18 +119,30 @@ function parseCSVLine(line) {
     return result.map(val => val.replace(/"/g, ''));
 }
 
-// 연도 정보 추출
+// 연도 정보 추출 (동적 감지)
 function extractYears() {
     if (!csvData || csvData.length === 0) return;
     
-    const headers = Object.keys(csvData[0]);
-    availableYears = headers
-        .filter(header => header.startsWith('SCR_EST_'))
-        .map(header => parseInt(header.replace('SCR_EST_', '')))
-        .filter(year => !isNaN(year))
-        .sort((a, b) => a - b);
+    const firstRow = csvData[0];
+    availableYears = [];
     
-    console.log('사용 가능한 연도:', availableYears);
+    // SCR_EST_YYYY 형태의 컬럼명에서 연도 추출 (범위 제한 없이)
+    Object.keys(firstRow).forEach(key => {
+        const match = key.match(/^SCR_EST_(\d{4})$/);
+        if (match) {
+            const year = parseInt(match[1]);
+            // 연도가 4자리 숫자이고 합리적인 범위 내에 있으면 추가
+            if (year >= 1900 && year <= 2100) {
+                availableYears.push(year);
+            }
+        }
+    });
+    
+    // 연도 정렬 (오름차순)
+    availableYears.sort((a, b) => a - b);
+    
+    console.log('CSV에서 감지된 사용 가능한 연도:', availableYears);
+    console.log('연도 범위:', availableYears.length > 0 ? `${Math.min(...availableYears)} ~ ${Math.max(...availableYears)}` : '없음');
 }
 
 // 필터 옵션 업데이트
@@ -359,26 +383,36 @@ function applyFilters() {
 // 대학 목록 업데이트
 function updateUniversityList() {
     const listContainer = document.getElementById('universityList');
-    if (!listContainer) return;
+    if (!listContainer) {
+        console.error('universityList 요소를 찾을 수 없습니다.');
+        return;
+    }
     
     const filtered = applyFilters();
+    console.log(`필터링된 대학 수: ${filtered.length}개`);
     
+    // 기존 목록 초기화
     listContainer.innerHTML = '';
     
-    filtered.forEach(row => {
+    if (filtered.length === 0) {
+        listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">필터 조건에 맞는 대학이 없습니다.</div>';
+        return;
+    }
+    
+    filtered.forEach((row, index) => {
         const item = document.createElement('div');
         item.className = 'university-item';
         
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.id = `univ_${row.SNM}`;
+        checkbox.id = `univ_${index}_${row.SNM}`;
         checkbox.value = row.SNM;
         checkbox.checked = selectedUniversities.has(row.SNM);
         checkbox.onchange = () => updateSelectedUniversities();
         
         const label = document.createElement('label');
-        label.htmlFor = `univ_${row.SNM}`;
-        label.textContent = row.SNM;
+        label.htmlFor = `univ_${index}_${row.SNM}`;
+        label.textContent = row.SNM || 'Unknown';
         
         item.appendChild(checkbox);
         item.appendChild(label);
@@ -386,6 +420,7 @@ function updateUniversityList() {
     });
     
     updateSelectedCount();
+    console.log('대학 목록 DOM 업데이트 완료');
 }
 
 // 선택된 대학 업데이트
@@ -420,6 +455,22 @@ function toggleAllUniversities() {
     updateSelectedUniversities();
 }
 
+// 평균값 그래프 표시 토글
+function onShowAverageChange() {
+    const checkbox = document.getElementById('showAverageCheckbox');
+    showAverage = checkbox.checked;
+    
+    console.log('평균값 그래프 표시:', showAverage ? '켜짐' : '꺼짐');
+    
+    // 차트가 있으면 다시 생성
+    if (trendChart && csvData) {
+        const dataForChart = prepareChartData();
+        if (dataForChart.length > 0) {
+            createTrendChart(dataForChart);
+        }
+    }
+}
+
 // 선택 모드 설정
 function setSelectionMode(mode) {
     selectionMode = mode;
@@ -427,16 +478,29 @@ function setSelectionMode(mode) {
     const modeBtns = document.querySelectorAll('.mode-btn');
     modeBtns.forEach(btn => btn.classList.remove('active'));
     
-    event.target.classList.add('active');
+    // 클릭된 버튼을 활성화 (event.target 대신 직접 찾기)
+    const clickedBtn = Array.from(modeBtns).find(btn => 
+        (mode === 'all' && btn.textContent.includes('필터링 후 전체')) ||
+        (mode === 'manual' && btn.textContent.includes('수동 선택'))
+    );
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
     
     const selector = document.getElementById('universitySelector');
     const dataRangeGroup = document.getElementById('dataRangeSliderGroup');
     
+    console.log(`선택 모드 변경: ${mode}`);
+    
     if (mode === 'manual') {
+        // 수동 선택 모드
         selector.classList.add('active');
         dataRangeGroup.style.display = 'none';
+        console.log('대학 목록 업데이트 시작...');
         updateUniversityList();
+        console.log('대학 목록 업데이트 완료');
     } else {
+        // 전체 모드
         selector.classList.remove('active');
         dataRangeGroup.style.display = 'block';
         selectedUniversities.clear();
@@ -483,7 +547,7 @@ async function generateChart() {
     }
 }
 
-// 차트 데이터 준비
+// 차트 데이터 준비 (연도별 컬럼 사용)
 function prepareChartData() {
     const filtered = applyFilters();
     let dataToUse = filtered;
@@ -502,6 +566,8 @@ function prepareChartData() {
     const startYear = availableYears[selectedYearRange.start];
     const endYear = availableYears[selectedYearRange.end];
     let yearsToUse = availableYears.filter(year => year >= startYear && year <= endYear);
+    
+    console.log(`차트 데이터 준비: ${dataToUse.length}개 대학, ${yearsToUse.length}개 연도 (${startYear}-${endYear})`);
     
     return dataToUse.map(row => ({
         university: row.SNM,
@@ -531,7 +597,7 @@ function calculateTrend(scores) {
     return 'neutral';
 }
 
-// 연도별 추이 차트 생성
+// 연도별 추이 차트 생성 (평균값 표시 옵션 포함)
 function createTrendChart(data) {
     const ctx = document.getElementById('trendChart').getContext('2d');
     
@@ -539,37 +605,49 @@ function createTrendChart(data) {
         trendChart.destroy();
     }
     
-    // 평균 점수 계산
-    const avgScores = data[0].years.map((year, idx) => {
-        const scores = data.map(d => d.scores[idx]).filter(s => s !== null);
-        return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
-    });
+    // 데이터셋 배열 초기화
+    const datasets = [];
     
-    // 개별 대학 데이터셋 (슬라이더로 선택된 범위 내에서만)
-    const datasets = [{
-        label: '전체 평균',
-        data: avgScores,
-        borderColor: CHART_COLORS.primary,
-        backgroundColor: CHART_COLORS.primary + '20',
-        borderWidth: 3,
-        tension: 0.4,
-        pointRadius: 5,
-        pointHoverRadius: 7
-    }];
+    // 평균값 그래프가 켜져있을 때만 추가
+    if (showAverage) {
+        // 평균 점수 계산
+        const avgScores = data[0].years.map((year, idx) => {
+            const scores = data.map(d => d.scores[idx]).filter(s => s !== null);
+            return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+        });
+        
+        datasets.push({
+            label: '전체 평균',
+            data: avgScores,
+            borderColor: CHART_COLORS.primary,
+            backgroundColor: CHART_COLORS.primary + '20',
+            borderWidth: 3,
+            tension: 0.4,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: false,
+            order: 1 // 평균선이 맨 앞에 오도록
+        });
+    }
     
     // 개별 대학 추가 (최대 20개까지만 개별 라인 표시)
     const maxIndividualLines = 20;
     const individualData = data.slice(0, Math.min(data.length, maxIndividualLines));
     individualData.forEach((univ, idx) => {
+        const hue = idx * (360 / maxIndividualLines);
+        const opacity = showAverage ? 0.7 : 1; // 평균선이 있을 때는 개별 라인을 약간 투명하게
+        
         datasets.push({
             label: univ.university,
             data: univ.scores,
-            borderColor: `hsl(${idx * (360 / maxIndividualLines)}, 70%, 50%)`,
-            backgroundColor: `hsla(${idx * (360 / maxIndividualLines)}, 70%, 50%, 0.1)`,
-            borderWidth: 2,
+            borderColor: `hsla(${hue}, 70%, 50%, ${opacity})`,
+            backgroundColor: `hsla(${hue}, 70%, 50%, 0.1)`,
+            borderWidth: showAverage ? 1.5 : 2, // 평균선이 있을 때는 개별 라인을 약간 얇게
             tension: 0.4,
-            pointRadius: 3,
-            pointHoverRadius: 5
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            fill: false,
+            order: 2 // 개별 라인들이 평균선 뒤에 오도록
         });
     });
     
@@ -593,6 +671,13 @@ function createTrendChart(data) {
                         boxWidth: 12,
                         font: {
                             size: 11
+                        },
+                        filter: function(legendItem, chartData) {
+                            // 평균값 그래프가 꺼져있을 때는 평균 라벨 숨김
+                            if (!showAverage && legendItem.text === '전체 평균') {
+                                return false;
+                            }
+                            return true;
                         }
                     }
                 },
@@ -756,14 +841,19 @@ function navigateTo(page) {
 }
 
 function onFilterChange() {
+    console.log('필터 변경됨');
     updateCurrentInfo();
     
     // 데이터 범위 슬라이더 업데이트
     updateDataRangeSliders();
     
+    // 수동 선택 모드일 때 대학 목록 업데이트
     if (selectionMode === 'manual') {
+        console.log('수동 선택 모드에서 대학 목록 업데이트');
         updateUniversityList();
     }
+    
+    // 차트가 있으면 업데이트
     if (trendChart || pieChart) {
         generateChart();
     }
@@ -803,6 +893,9 @@ function showError(message) {
             <div class="placeholder-icon">⚠️</div>
             <h3>오류 발생</h3>
             <p>${message}</p>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                파일 경로를 확인하세요: ../../resource/csv_files/예측데이터총합.csv
+            </p>
         </div>
     `;
     placeholder.style.display = 'flex';
@@ -855,6 +948,7 @@ function saveAnalysis() {
             start: selectedDataRange.start,
             end: selectedDataRange.end
         },
+        showAverage: showAverage, // 평균값 표시 설정 저장
         styp: document.getElementById('stypFilter').value,
         fnd: document.getElementById('fndFilter').value,
         rgn: document.getElementById('rgnFilter').value,
@@ -930,3 +1024,99 @@ window.addEventListener('beforeunload', function() {
     }
     console.log('가능성 예측 페이지를 떠납니다.');
 });
+
+// 디버깅용 함수
+function debugInfo() {
+    console.log('=== 가능성 예측 디버깅 정보 ===');
+    console.log('사용 가능한 연도:', availableYears);
+    console.log('CSV 데이터:', csvData ? csvData.length + '행' : '없음');
+    console.log('선택된 연도 범위:', {
+        start: selectedYearRange.start,
+        end: selectedYearRange.end,
+        startYear: availableYears[selectedYearRange.start],
+        endYear: availableYears[selectedYearRange.end]
+    });
+    console.log('평균값 표시:', showAverage);
+    console.log('현재 차트:', {
+        trendChart: trendChart ? '있음' : '없음',
+        pieChart: pieChart ? '있음' : '없음'
+    });
+    
+    if (csvData && csvData.length > 0) {
+        console.log('컬럼명:', Object.keys(csvData[0]));
+        
+        // 점수 컬럼들 확인
+        const scoreColumns = Object.keys(csvData[0]).filter(key => key.match(/^SCR_EST_\d{4}$/));
+        console.log('점수 컬럼들:', scoreColumns);
+        
+        // 각 연도별 유효 데이터 수
+        availableYears.forEach(year => {
+            const validCount = csvData.filter(row => {
+                const value = row[`SCR_EST_${year}`];
+                return value !== null && value !== undefined && value !== '' && !isNaN(value);
+            }).length;
+            console.log(`${year}년: ${validCount}개 유효 데이터`);
+        });
+    }
+}
+
+// 개발자 도구용 전역 함수 등록
+window.debugPrediction = debugInfo;
+window.libraPrediction = {
+    csvData,
+    availableYears,
+    selectedYearRange,
+    selectedDataRange,
+    selectionMode,
+    selectedUniversities,
+    generateChart,
+    loadData: loadCSVData,
+    debugInfo,
+    // 수동 선택 모드 테스트
+    testManualMode: function() {
+        console.log('수동 선택 모드 테스트');
+        console.log('현재 모드:', selectionMode);
+        console.log('선택된 대학 수:', selectedUniversities.size);
+        console.log('선택된 대학들:', Array.from(selectedUniversities));
+        
+        const selector = document.getElementById('universitySelector');
+        const listContainer = document.getElementById('universityList');
+        console.log('selector 표시 상태:', selector ? selector.classList.contains('active') : 'selector 없음');
+        console.log('listContainer 내용:', listContainer ? listContainer.children.length + '개 항목' : 'listContainer 없음');
+        
+        if (listContainer && listContainer.children.length === 0) {
+            console.log('대학 목록이 비어있음 - updateUniversityList() 실행');
+            updateUniversityList();
+        }
+    },
+    // 수동으로 모드 변경 테스트
+    setManualMode: function() {
+        setSelectionMode('manual');
+    },
+    setAllMode: function() {
+        setSelectionMode('all');
+    },
+    // 연도별 데이터 테스트
+    testYearData: function(year) {
+        if (!csvData || !availableYears.includes(year)) {
+            console.log(`${year}년 데이터가 없습니다.`);
+            return;
+        }
+        
+        const scoreColumn = `SCR_EST_${year}`;
+        const validData = csvData.filter(row => {
+            const value = row[scoreColumn];
+            return value !== null && value !== undefined && value !== '' && !isNaN(value);
+        });
+        
+        console.log(`${year}년 데이터 현황:`);
+        console.log(`- 전체 데이터: ${csvData.length}개`);
+        console.log(`- 유효 데이터: ${validData.length}개`);
+        
+        if (validData.length > 0) {
+            const scores = validData.map(row => parseFloat(row[scoreColumn]));
+            console.log(`- 점수 범위: ${Math.min(...scores)} ~ ${Math.max(...scores)}`);
+            console.log(`- 평균 점수: ${(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)}`);
+        }
+    }
+};

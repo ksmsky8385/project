@@ -139,17 +139,7 @@
                         <div class="form-group">
                             <label for="yearSelect">연도 선택</label>
                             <select id="yearSelect" onchange="onYearChange()" aria-label="연도 선택">
-                                <option value="2024">2024년</option>
-                                <option value="2023">2023년</option>
-                                <option value="2022">2022년</option>
-                                <option value="2021">2021년</option>
-                                <option value="2020">2020년</option>
-                                <option value="2019">2019년</option>
-                                <option value="2018">2018년</option>
-                                <option value="2017">2017년</option>
-                                <option value="2016">2016년</option>
-                                <option value="2015">2015년</option>
-                                <option value="2014">2014년</option>
+                                <!-- 동적으로 연도 옵션이 추가됨 -->
                             </select>
                         </div>
                     </div>
@@ -327,7 +317,7 @@
                             <div class="info-grid">
                                 <div class="info-item">
                                     <span class="label">연도:</span>
-                                    <span class="value" id="currentYear">2024년</span>
+                                    <span class="value" id="currentYear">-</span>
                                 </div>
                                 <div class="info-item">
                                     <span class="label">대학유형:</span>
@@ -383,14 +373,14 @@
 
         // JavaScript 파일 로드 실패 시 처리
         function handleScriptError() {
-            console.error('environment_analysis.js 로드 실패');
+            console.error('script_chartpage_num01.js 로드 실패');
             const errorDiv = document.getElementById('errorMessage');
             if (errorDiv) {
                 errorDiv.style.display = 'block';
                 errorDiv.innerHTML = `
                     <strong>스크립트 로드 실패</strong><br>
-                    environment_analysis.js 파일을 찾을 수 없습니다.<br>
-                    파일 경로를 확인해주세요: ../js/environment_analysis.js
+                    script_chartpage_num01.js 파일을 찾을 수 없습니다.<br>
+                    파일 경로를 확인해주세요: ../js/script_chartpage_num01.js
                 `;
             }
         }
@@ -422,7 +412,7 @@
         });
     </script>
 
-    <!-- 메인 스크립트 파일 로드 -->
-    <script src="../js/learning_analysis.js" onerror="handleScriptError()"></script>
+    <!-- 메인 스크립트 파일 로드 (파일명 변경됨) -->
+    <script src="../js/script_chartpage_num01.js" onerror="handleScriptError()"></script>
 </body>
 </html>

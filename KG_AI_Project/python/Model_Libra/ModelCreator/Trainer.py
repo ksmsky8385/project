@@ -34,7 +34,7 @@ class ModelTrainer:
     def train_by_cluster(self, df, cluster_col="cluster_id"):
         if not self.cluster_enabled:
             print("[INFO] 클러스터링 비활성화됨 → 전체 모델만 학습")
-            return {}  # ✅ 빈 딕셔너리 반환
+            return {}
 
         validate_columns(df, self.input_cols + [self.target_col, cluster_col])
 
