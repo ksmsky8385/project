@@ -7,7 +7,7 @@ def main():
     print("[RUNNING] Predictor 파이프라인 시작")
     start_time = time.time()
 
-    config_name = os.getenv("MODEL_CONFIG_NAME", "Num02_Config_XGB.json")
+    config_name = os.getenv("MODEL_CONFIG_NAME", "Num01_Config_RFR.json")
     controller = Controller(config_name=config_name)
     controller.run()
 

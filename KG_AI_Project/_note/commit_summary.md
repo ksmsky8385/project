@@ -6,3 +6,4 @@
 - [80175e5] 0717-note update (ksmsky8385, 2025-07-17 17:46:16) on branch [main]
 - [df38600] 0717-update (ksmsky8385, 2025-07-17 17:48:29) on branch [main]
 - [808f372] 0718 (ksmsky8385, 2025-07-20 13:32:53) on branch [main]
+- [a9aef78] 0720 (ksmsky8385, 2025-07-20 21:09:52) on branch [main]

@@ -1,34 +1,30 @@
-# Tuner_RFR/__main__.py
-
-import sys, os
+import os
+import sys
+import time
 from pathlib import Path
-import json
 
-# 경로 설정
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from tunercontroller import TunerController
-from tunerlogranker import TunerLogRanker
+
+from tunercontroller_Num01 import TunerController_Num01
+from tunercontroller_Num02 import TunerController_Num02
+
+def main():
+    config_name = os.getenv("MODEL_CONFIG_NAME", "Num01_Config_RFR.json")
+    config_path = Path(__file__).resolve().parent.parent / "_Configs" / config_name
+    log_dir = Path(__file__).resolve().parent.parent / "_Logs" / "Tuner_Logs"
+    log_dir.mkdir(exist_ok=True, parents=True)
+
+    trial_count = 10
+    rating_cycle = 5
+
+    if "Num01" in config_name:
+        controller = TunerController_Num01(config_path, log_dir, trial_count, rating_cycle)
+    elif "Num02" in config_name:
+        controller = TunerController_Num02(config_path, log_dir, trial_count, rating_cycle)
+    else:
+        raise ValueError(f"[ERROR] 지원하지 않는 모델 번호: {config_name}")
+
+    controller.run()
 
 if __name__ == "__main__":
-    # 현재 파일 기준 디렉토리
-    tuner_dir = Path(__file__).parent
-    log_path = tuner_dir / "tuner_log.json"
-    output_path = tuner_dir / "toprating.json"
-
-    # 로그 파일 초기화
-    for path in [log_path, output_path]:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump([], f, indent=2)
-
-    # 튜닝 수행
-    controller = TunerController(n_trials=1)
-    save_interval: int = 2
-    top_k = 2
-    controller.run(save_interval, top_k)
-
-    # 랭킹 추출
-    ranker = TunerLogRanker(
-        log_path=log_path,
-        output_path=output_path
-    )
-    ranker.rank_top_trials(top_k=5)
+    main()

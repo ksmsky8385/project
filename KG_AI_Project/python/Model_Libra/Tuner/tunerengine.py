@@ -1,41 +1,56 @@
-# Tuner_RFR/tunerengine.py
-
-import json
 import random
-from pathlib import Path
-from typing import Dict, Any
 
 class RandomTuner:
-    def __init__(self, searchspace_path: Path):
-        self.searchspace_path = searchspace_path
-        self.search_space = self._load_searchspace()
-
-    def _load_searchspace(self) -> Dict[str, Any]:
-        with open(self.searchspace_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+    def __init__(self, param_spec: dict):
+        self.param_spec = param_spec
+        self.sampled_history = set()
 
     def sample_param(self, spec: dict):
         if spec["type"] == "fixed":
             return spec["fixed"]
-
-        if spec["type"] == "categorical" and "choices" in spec:
-            return random.choice(spec["choices"])
-
-        if spec["type"] == "int" and "range" in spec:
+        elif spec["type"] == "categorical":
+            choice = random.choice(spec.get("choices", []))
+            return None if choice in [None, "None", "null"] else choice
+        elif spec["type"] == "int":
             low, high = spec["range"]
             return random.randint(low, high)
-        
-        if spec["type"] == "categorical" and "choices" in spec:
-            choice = random.choice(spec["choices"])
-            return None if choice in [None, "None", "null"] else choice
-
-        # 향후 float 확장 가능
+        elif spec["type"] == "float":
+            low, high = spec["range"]
+            return round(random.uniform(low, high), 4)
         return None
 
-    def sample_params(self) -> Dict[str, Any]:
+    def sample_single_model_params(self) -> dict:
         sampled = {}
-        for key, spec in self.search_space.items():
-            value = self.sample_param(spec)
-            if value is not None:
-                sampled[key] = value
+        for key, spec in self.param_spec.items():
+            if key == "n_clusters":
+                continue  # 클러스터 수는 별도로 다룸
+            val = self.sample_param(spec)
+            if val is not None:
+                sampled[key] = val
         return sampled
+
+    def sample_params(self) -> dict:
+        for _ in range(10):
+            result = {}
+
+            # 클러스터 수 먼저 샘플링
+            cluster_spec = self.param_spec.get("n_clusters", {"type": "int", "range": [2, 5]})
+            n_clusters = self.sample_param(cluster_spec)
+            result["n_clusters"] = n_clusters
+
+            # 풀 모델 하이퍼파라미터
+            full_params = self.sample_single_model_params()
+            result["full"] = full_params
+
+            # 클러스터별 하이퍼파라미터
+            for i in range(n_clusters):
+                cluster_params = self.sample_single_model_params()
+                result[str(i)] = cluster_params
+
+            # 중복 방지 처리
+            hashable = frozenset((key, frozenset(value.items())) for key, value in result.items() if isinstance(value, dict))
+            if hashable not in self.sampled_history:
+                self.sampled_history.add(hashable)
+                return result
+
+        return result

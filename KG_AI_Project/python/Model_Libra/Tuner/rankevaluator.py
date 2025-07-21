@@ -1,50 +1,41 @@
 import numpy as np
+from statistics import stdev
 
-def calculate_rank_stddev_by_years(filtered_table: str, base_table: str, years: list[int], conn) -> dict:
+def calculate_rank_stddev_by_years(years: list, conn) -> dict:
     cursor = conn.cursor()
-    stddev_by_year = {}
+    stddevs = {}
+    for y in years:
+        col = f"SCR_EST_{y}"
+        query = f"SELECT {col} FROM ESTIMATIONFLOW WHERE {col} IS NOT NULL"
+        try:
+            cursor.execute(query)
+            scores = [row[0] for row in cursor.fetchall()]
+            stddevs[str(y)] = round(stdev(scores), 4) if len(scores) > 1 else 0
+        except Exception as e:
+            print(f"[STDDEV 평가 오류] {y}년 → {e}")
+            stddevs[str(y)] = -1
+    return stddevs
 
-    for yr in years:
-        table_name = f"{base_table}_{yr}"
-        query = f"""
-            SELECT F.RK, E.RK_EST
-            FROM {filtered_table} F
-            JOIN {table_name} E
-            ON F.ID = E.ID AND F.YR = E.YR
-            WHERE F.RK IS NOT NULL AND E.RK_EST IS NOT NULL
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        diffs = [(int(rk) - int(est)) for rk, est in rows]
-
-        if diffs:
-            stddev = np.std(diffs)
-            stddev_by_year[str(yr)] = stddev
-        else:
-            stddev_by_year[str(yr)] = None  # 또는 0, -1로 처리
-
-    return stddev_by_year
-
-def calculate_mean_stddev(stddev_by_year: dict) -> float:
-    values = [v for v in stddev_by_year.values() if v is not None]
-    return np.mean(values) if values else -1
-
-def calculate_rank_error_by_years(filtered_table: str, base_table: str, years: list[int], conn) -> dict:
+def calculate_rank_error_by_years(years: list, conn) -> dict:
     cursor = conn.cursor()
-    error_by_year = {}
+    errors = {}
+    for y in years:
+        col = f"SCR_EST_{y}"
+        query = f"SELECT {col} FROM ESTIMATIONFLOW WHERE {col} IS NOT NULL"
+        try:
+            cursor.execute(query)
+            scores = [row[0] for row in cursor.fetchall()]
+            if len(scores) > 0:
+                mean = np.mean(scores)
+                sq_errors = [(s - mean) ** 2 for s in scores]
+                errors[str(y)] = int(sum(sq_errors))
+            else:
+                errors[str(y)] = 0
+        except Exception as e:
+            print(f"[ERROR 평가 오류] {y}년 → {e}")
+            errors[str(y)] = -1
+    return errors
 
-    for yr in years:
-        table_name = f"{base_table}_{yr}"
-        query = f"""
-            SELECT F.RK, E.RK_EST
-            FROM {filtered_table} F
-            JOIN {table_name} E
-            ON F.ID = E.ID AND F.YR = E.YR
-            WHERE F.RK IS NOT NULL AND E.RK_EST IS NOT NULL
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        year_error = sum((int(rk) - int(est)) ** 2 for rk, est in rows)
-        error_by_year[str(yr)] = year_error
-
-    return error_by_year
+def calculate_mean_stddev(stddevs: dict) -> float:
+    values = [v for v in stddevs.values() if v >= 0]
+    return round(sum(values) / len(values), 4) if values else -1

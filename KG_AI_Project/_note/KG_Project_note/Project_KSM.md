@@ -458,6 +458,10 @@ Model_Libra/
 │   └── Num02_Config_XGB.json        # 모델 설정값2, 하이퍼파라미터 등 환경설정 값
 │
 ├── _Logs/                           # 로그파일 모음 폴더
+│   ├──Tuner_Logs/
+│   │   ├── Num01_Tuner_Log_20250721_171600.json
+│   │   └── Num01_TopRating_20250721_170851.json
+│   │
 │   ├── Num01_RFR_v1.0_Log.json
 │   └── Num02_XGB_v1.0_Log.json
 │
@@ -503,6 +507,21 @@ Model_Libra/
 │   ├── PickleLoader.py             # 피클 로딩
 │   ├── TableBuilder_Num01.py       # 예측점수 생성 - Num01모델용
 │   └── TableBuilder_Num02.py       # 예측점수 생성 - Num02모델용
+│
+├── Tuner/ <- 모델 튜닝 패키지
+│   │  
+│   ├── __init__.py  
+│   ├── __main__.py <- tuner 패키지 실행  
+│   ├── configmanager.py <- 모델 패키지의 컨피그값 수정 클래스  
+│   ├── rankevaluator.py <- 튜닝 사이클 별 점수 부여 클래스  
+│   ├── searchspace.json <- 하이퍼 파라미터 튜닝 범위 설정값 파일  
+│   ├── toprating.json <- 로그파일 중 상위 점수 모델 기록파일  
+│   ├── tuner_log.json <- 튜닝 로그 기록파일  
+│   ├── tunercontroller.py <- 튜너 패키지 파이프라인 클래스  
+│   ├── tunerengine.py <- 튜닝 로직 클래스  
+│   ├── tunerlogger.py <- 튜닝 사이클 로그에 기록 클래스  
+│   ├── tunerlogranker.py <- 로그에 상위 점수 기록 로직 클래스  
+│   └── tuningcyclerunner.py <- 튜닝 사이클 조정 클래스  
 │
 ├── __init__.py
 ├── __main__.py           # 전체 실행

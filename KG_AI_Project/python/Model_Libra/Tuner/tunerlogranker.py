@@ -1,113 +1,85 @@
 import json
+from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any
-from collections import defaultdict
-import statistics
+from collections import OrderedDict
 
 class TunerLogRanker:
-    def __init__(self, log_path: Path, output_path: Path):
-        self.log_path = log_path
-        self.output_path = output_path
+    def __init__(self, log_dir: Path, model_num: str, timestamp: str):
+        self.log_dir = log_dir
+        self.model_num = model_num
+        self.timestamp = timestamp  # 메인에서 받아온 타임스탬프
 
-    def _load_log(self) -> List[Dict[str, Any]]:
-        try:
-            with open(self.log_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"[경고] 로그 파일을 찾거나 불러올 수 없습니다: {self.log_path}")
-            return []
+    def load_trials(self) -> list:
+        trial_logs = []
+        for path in self.log_dir.glob(f"{self.model_num}_Tuner_Log_*.json"):
+            with open(path, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+                trial_logs.extend(logs)
+        return trial_logs
 
-    def rank_top_trials(self, top_k: int = 10):
-        logs = self._load_log()
-        if not logs:
-            print("[실패] 로그가 비어있거나 로드되지 않았습니다.")
-            return
-
-        # 클러스터별 R² 집계 및 횟수 카운트
-        r2_map = defaultdict(list)
-        cluster_count = defaultdict(int)
-
-        for trial in logs:
-            n_clusters = trial.get("n_clusters")
-            cluster_r2 = trial.get("summary_metrics", {}).get("cluster_test", {}).get("R2", None)
-            full_r2 = trial.get("summary_metrics", {}).get("full_predict", {}).get("R2", None)
-
-            # 조건 필터링: 클러스터와 full R²가 모두 0.8 이상인 경우만 포함
-            if (cluster_r2 is not None and full_r2 is not None and
-                cluster_r2 >= 0.8 and full_r2 >= 0.8 and n_clusters is not None):
-                r2_map[n_clusters].append(cluster_r2)
-                cluster_count[n_clusters] += 1
-            else:
-                continue  # 조건 미달 trial은 제외
-
-        # 평균 + 횟수 붙여서 문자열화
-        average_r2_by_nclusters = {
-            str(k): f"{round(statistics.mean(r2_map[k]), 4)} (n={cluster_count[k]})"
-            for k in sorted(r2_map.keys())
-        }
-
-        # 필터링된 trial 재추출
-        filtered_trials = [
-            trial for trial in logs
-            if trial.get("summary_metrics", {}).get("cluster_test", {}).get("R2", -1) >= 0.8 and
-                trial.get("summary_metrics", {}).get("full_predict", {}).get("R2", -1) >= 0.8
-        ]
-
-        if not filtered_trials:
-            print("[실패] 조건을 만족하는 trial이 없습니다.")
-            return
-
-        # 복합 정렬 기준
-        def sort_key(trial: Dict[str, Any]):
-            stddev_mean = trial.get("mean_rank_stddev", float("inf"))
-            error_score = trial.get("rank_error_score", float("inf"))
-            summary = trial.get("summary_metrics", {})
-
-            cluster_r2 = summary.get("cluster_test", {}).get("R2", -999)
-            full_r2 = summary.get("full_predict", {}).get("R2", -999)
-            cluster_better = 1 if cluster_r2 > full_r2 else 0
-
+    def filter_and_rank_trials(self, logs: list, top_k: int = 5) -> list:
+        def ranking_key(trial):
+            score = trial.get("summary_metrics", {}).get("cluster_test", {})
+            cluster_R2 = score.get("R2", -1)
+            predict_R2 = trial.get("summary_metrics", {}).get("full_predict", {}).get("R2", -1)
+            std = trial.get("mean_rank_stddev", 99999)
+            error = trial.get("rank_error_score", 999999999)
+            better = trial.get("cluster_better_than_predict", False)
             return (
-                stddev_mean,             # 평균 표준편차 낮은 순
-                error_score,             # 오차점수 낮은 순
-                -cluster_r2,             # 클러스터 R2 높은 순
-                -cluster_better,         # 클러스터가 full보다 높은 경우 우선
-                -full_r2                 # full R2 높은 순
+                std,
+                error,
+                -cluster_R2,
+                -predict_R2,
+                not better
             )
 
-        # 랭킹 대상 trial 정렬 및 추출
-        sorted_trials = sorted(filtered_trials, key=lambda x: sort_key(x))[:top_k]
+        filtered = [t for t in logs if t.get("summary_metrics", {}).get("cluster_test", {}).get("R2", 0) >= 0.8]
+        ranked = sorted(filtered, key=ranking_key)
+        return ranked[:top_k]
 
-        ranked = []
-        for idx, trial in enumerate(sorted_trials, start=1):
-            summary = trial.get("summary_metrics", {})
-            cluster_r2 = summary.get("cluster_test", {}).get("R2", -999)
-            full_predict_r2 = summary.get("full_predict", {}).get("R2", -999)
+    def save_rating_log(self, ranked_trials: list, cycle_idx: int):
+        reordered_trials = []
+        for i, trial in enumerate(ranked_trials, start=1):
+            trial["rank"] = i
+            timestamp_value = trial.pop("timestamp", None)
 
-            ranked.append({
-                "rank": idx,
-                "timestamp": trial.get("timestamp"),
-                "n_clusters": trial.get("n_clusters"),
-                "score_keys": {
-                    "mean_rank_stddev": trial.get("mean_rank_stddev"),
-                    "rank_error_score": trial.get("rank_error_score"),
-                    "rank_stddev_by_year": trial.get("rank_stddev_by_year", {}),
-                    "rank_error_by_year": trial.get("rank_error_by_year", {}),
-                    "cluster_R2": cluster_r2,
-                    "full_predict_R2": full_predict_r2,
-                    "cluster_better_than_predict": cluster_r2 > full_predict_r2
-                },
-                "cluster_params": trial.get("cluster_params"),
-                "summary_metrics": summary
-            })
+            # rank → timestamp → 나머지 순으로 정렬
+            ordered_trial = OrderedDict()
+            ordered_trial["rank"] = i
+            if timestamp_value:
+                ordered_trial["timestamp"] = timestamp_value
+            for key, value in trial.items():
+                if key not in ["rank", "timestamp"]:
+                    ordered_trial[key] = value
+            reordered_trials.append(ordered_trial)
 
-        output = {
-            "average_R2_by_n_clusters": average_r2_by_nclusters,
-            "ranked_trials": ranked
+        rating = {
+            "timestamp": datetime.now().isoformat(),
+            "cycle": cycle_idx,
+            "ranked_trials": reordered_trials
         }
 
-        with open(self.output_path, "w", encoding="utf-8") as f:
-            json.dump(output, f, indent=2)
+        path = self.log_dir / f"{self.model_num}_TopRating_{self.timestamp}.json"
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(rating, f, indent=2)
 
-        print(f"[완료] 조건을 만족한 trial 중 Top {top_k} 랭킹 추출 완료 → {self.output_path}")
 
+    def rank_top_trials(self, top_k: int = 5) -> list:
+        def score_key(trial):
+            cluster_r2 = trial.get("cluster_R2", -1)
+            mean_std = trial.get("mean_rank_stddev", 99999)
+            error_score = trial.get("rank_error_score", 99999999)
+            full_r2 = trial.get("full_predict_R2", -1)
+            better = trial.get("cluster_better_than_predict", False)
+            return (
+                mean_std,
+                error_score,
+                -cluster_r2,
+                -full_r2,
+                not better
+            )
+
+        logs = self.load_trials()
+        filtered = [trial for trial in logs if trial.get("cluster_R2", 0) >= 0.8]
+        ranked = sorted(filtered, key=score_key)
+        return ranked[:top_k]

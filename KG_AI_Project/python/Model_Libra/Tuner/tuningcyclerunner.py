@@ -1,18 +1,25 @@
-# Tuner_RFR/tuningcyclerunner.py
-
+import os
 import subprocess
-import json
-from core_utiles.config_loader import RFR_CONFIG_PATH
 from pathlib import Path
 
-def run_ml_rfr_pipeline():
-    entrypoint = Path(RFR_CONFIG_PATH) / "__main__.py"
-    subprocess.run(["python", str(entrypoint)], check=True)
+def run_modelcreator(config_obj):
+    config_path = config_obj.config_path
+    os.environ["MODEL_CONFIG_NAME"] = config_path.name
 
+    # 프로젝트 루트에서 ModelCreator 위치 설정
+    project_root = Path(__file__).resolve().parent.parent
+    modelcreator_main = project_root / "ModelCreator" / "__main__.py"
 
-def get_latest_metrics(metrics_path: Path) -> dict:
-    try:
-        with open(metrics_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+    subprocess.run(
+        ["python", str(modelcreator_main)],
+        check=True
+    )
+
+def run_predictor(config_obj):
+    config_path = config_obj.config_path
+    os.environ["MODEL_CONFIG_NAME"] = config_path.name
+
+    project_root = Path(__file__).resolve().parent.parent
+    predictor_main = project_root / "Predictor" / "__main__.py"
+
+    subprocess.run(["python", str(predictor_main)], check=True)

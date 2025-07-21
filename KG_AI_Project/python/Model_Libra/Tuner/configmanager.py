@@ -2,31 +2,60 @@ import json
 from pathlib import Path
 
 class ConfigManager:
-    def __init__(self, config_path: Path, searchspace_path: Path):
+    def __init__(self, config_path: Path):
         self.config_path = config_path
-        self.searchspace_path = searchspace_path
         self.config = self._load_config()
-        self.searchspace = self._load_searchspace()
 
-    def _load_config(self) -> dict:
+    def _load_config(self):
         with open(self.config_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    def _load_searchspace(self) -> dict:
-        with open(self.searchspace_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+    def get_model_num(self):
+        return self.config.get("MODEL_NUM", "")
 
-    def update_cluster_params(self, cluster_id: str, params: dict):
-        if "RFR_PARAMS_BY_CLUSTER" not in self.config:
-            self.config["RFR_PARAMS_BY_CLUSTER"] = {}
-        self.config["RFR_PARAMS_BY_CLUSTER"][cluster_id] = params
+    def get_model_type(self):
+        return self.config.get("MODEL_TYPE", "")
+    
+    def get_model_name(self):
+        return self.config.get("MODEL_NAME", "")
 
-    def set_n_clusters(self, n_clusters: int):
-        self.config["CLUSTER_CONFIG"]["n_clusters"] = n_clusters
+    def get_tuning_params(self):
+        return self.config.get("TUNING_PARAMS", {})
 
-    def save(self):
+    def get_cluster_count(self):
+        return self.config.get("CLUSTER_CONFIG", {}).get("params", {}).get("KMeans", {}).get("n_clusters", 1)
+
+    def update_with_sampled_params(self, sampled: dict):
+        # Update cluster count
+        n_clusters = sampled.get("n_clusters", 3)
+        if "CLUSTER_CONFIG" not in self.config:
+            self.config["CLUSTER_CONFIG"] = {"params": {"KMeans": {}}}
+        self.config["CLUSTER_CONFIG"]["params"]["KMeans"]["n_clusters"] = n_clusters
+
+        # Build PARAMS dictionary from sampled structure:
+        # sampled = {
+        #     "n_clusters": 3,
+        #     "full": { ... },
+        #     "0": { ... },
+        #     "1": { ... },
+        #     "2": { ... }
+        # }
+
+        self.config["PARAMS"] = {"n_clusters": n_clusters}
+
+        # Full model parameters
+        self.config["PARAMS"]["full"] = sampled.get("full", {})
+
+        # Cluster-specific model parameters
+        for i in range(n_clusters):
+            key = str(i)
+            self.config["PARAMS"][key] = sampled.get(key, {})
+
+        self.dump()
+
+    def dump(self):
         with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(self.config, f, indent=2)
 
-    def get_config(self) -> dict:
+    def get_config(self):
         return self.config
