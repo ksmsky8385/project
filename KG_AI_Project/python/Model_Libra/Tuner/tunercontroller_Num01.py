@@ -41,9 +41,14 @@ class TunerController_Num01:
         self.model_num = self.config.get_model_num()
         self.model_type = self.config.get_model_type()
         self.model_name = self.config.get_model_name()
-        self.tuner = RandomTuner(self.config.get_tuning_params())
 
-        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 공유 타임스탬프
+        # 클러스터 활성 여부를 튜너에 넘겨줌
+        self.tuner = RandomTuner(
+            param_spec=self.config.get_tuning_params(),
+            cluster_enabled=self.config.get_cluster_enabled()
+        )
+
+        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_path = log_dir / f"{self.model_num}_Tuner_Log_{self.timestamp}.json"
         self.logger = TunerLogger(log_path)
         self.ranker = TunerLogRanker(log_dir, self.model_num, self.timestamp)
@@ -89,9 +94,11 @@ class TunerController_Num01:
                 "cluster_test": log_data.get("clustered", {})
             }
 
+            # 디버그 체크
             print("[디버그] summary_metrics =", json.dumps(summary_metrics, indent=2))
             print("[디버그] cluster_R2 =", cluster_R2)
             print("[디버그] full_predict_R2 =", full_predict_R2)
+            print("[디버그] cluster_params =", json.dumps(self.config.get_config().get("PARAMS", {}), indent=2))
 
             self.logger.append_extended(
                 model_num=self.model_num,
@@ -101,7 +108,7 @@ class TunerController_Num01:
                 rank_error_by_year=error_by_year,
                 rank_stddev_by_year=stddev_by_year,
                 mean_rank_stddev=mean_std,
-                n_clusters=sampled.get("n_clusters", -1),
+                n_clusters=self.config.get_cluster_count(),
                 cluster_R2=cluster_R2,
                 full_predict_R2=full_predict_R2,
                 cluster_better_than_predict=better

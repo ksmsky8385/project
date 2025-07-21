@@ -70,3 +70,27 @@ class TunerController_Num02:
                 r2_score=r2_score,
                 tuned_params=self.config.get_config().get("PARAMS", {})
             )
+
+            # 사이클마다 TopRating 저장
+            if (trial + 1) % self.rating_cycle == 0:
+                try:
+                    # 최근 기록들 가져오기
+                    all_trials = self.logger.log
+
+                    # r2_score 높은 순으로 상위 top_k 선택
+                    ranked = sorted(all_trials, key=lambda x: -x.get("r2_score", -1))
+                    top_k = ranked[:5]
+
+                    rating = {
+                        "timestamp": datetime.now().isoformat(),
+                        "cycle": trial + 1,
+                        "ranked_trials": top_k
+                    }
+
+                    path = self.log_dir / f"{self.model_num}_TopRating_{self.timestamp}.json"
+                    with open(path, "w", encoding="utf-8") as f:
+                        json.dump(rating, f, indent=2)
+
+                    print(f"[TopRating 저장 완료] → {path.name}")
+                except Exception as e:
+                    print(f"[TopRating 저장 오류] {e}")

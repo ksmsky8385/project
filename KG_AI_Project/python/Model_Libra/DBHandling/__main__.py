@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append("d:/workspace/project/KG_AI_Project/python/Model_Libra")
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from TableMergerUploader import TableMergerUploader
 from DataMergerAndExporter import DataMergerAndExporter

@@ -40,17 +40,19 @@ class TunerLogRanker:
     def save_rating_log(self, ranked_trials: list, cycle_idx: int):
         reordered_trials = []
         for i, trial in enumerate(ranked_trials, start=1):
-            trial["rank"] = i
-            timestamp_value = trial.pop("timestamp", None)
+            # rank와 timestamp 분리
+            rank_value = i
+            timestamp_value = trial.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-            # rank → timestamp → 나머지 순으로 정렬
+            # rank → timestamp → 나머지 순서 보장
             ordered_trial = OrderedDict()
-            ordered_trial["rank"] = i
-            if timestamp_value:
-                ordered_trial["timestamp"] = timestamp_value
+            ordered_trial["rank"] = rank_value
+            ordered_trial["timestamp"] = timestamp_value
+
             for key, value in trial.items():
                 if key not in ["rank", "timestamp"]:
                     ordered_trial[key] = value
+
             reordered_trials.append(ordered_trial)
 
         rating = {
@@ -62,7 +64,6 @@ class TunerLogRanker:
         path = self.log_dir / f"{self.model_num}_TopRating_{self.timestamp}.json"
         with open(path, "w", encoding="utf-8") as f:
             json.dump(rating, f, indent=2)
-
 
     def rank_top_trials(self, top_k: int = 5) -> list:
         def score_key(trial):

@@ -20,8 +20,8 @@ else:
 
 # 실행 순서 정의
 execution_sequence = [
-    # {"package": "DataHandling"},
-    # {"package": "DBHandling"},
+    {"package": "DataHandling"},
+    {"package": "DBHandling"},
     {"package": "ModelCreator", "config": "Num01_Config_RFR.json"},
     {"package": "Predictor", "config": "Num01_Config_RFR.json"},
     {"package": "ModelCreator", "config": "Num02_Config_XGB.json"},

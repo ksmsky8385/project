@@ -1,21 +1,21 @@
 name: your_project_env
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python=3.11
-  - pandas
-  - numpy
-  - scikit-learn
-  - oracledb
-  - openpyxl
-  - requests
-  - beautifulsoup4
-  - selenium
-  - lxml
-  - tqdm
-  - python-dotenv
-  - sqlalchemy
-  - xgboost
-  - seaborn
-  - dotenv
-
+  - pandas=2.3.1
+  - numpy=2.3.1
+  - scikit-learn=1.7.1
+  - oracledb=3.2.0
+  - openpyxl=3.1.5
+  - requests=2.32.4
+  - beautifulsoup4=4.13.4
+  - selenium=4.33.0
+  - lxml=5.2.1
+  - tqdm=4.66.4
+  - python-dotenv=1.0.1
+  - sqlalchemy=2.0.30
+  - xgboost=2.0.3
+  - seaborn=0.13.2
+  - matplotlib=3.10.3
