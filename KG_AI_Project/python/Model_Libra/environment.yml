@@ -1,4 +1,4 @@
-name: your_project_env
+name: libra
 channels:
   - defaults
   - conda-forge

@@ -75,11 +75,11 @@
   },
   "WINDOW_CONFIG": {
     "enabled": true,
-    "window_size": 2
+    "window_size": 3
   },
   "PARAMS": {
     "full": {
-      "window_size": 2,
+      "window_size": 3,
       "n_estimators": 519,
       "max_depth": 12,
       "learning_rate": 0.1723,

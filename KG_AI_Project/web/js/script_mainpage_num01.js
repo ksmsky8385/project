@@ -1,31 +1,21 @@
 // 페이지 네비게이션 함수
 function navigateTo(page) {
-    console.log(`${page} 페이지로 이동`);
-    
-    // 실제 페이지 이동 로직을 여기에 구현
     switch(page) {
         case 'learning':
-            // alert('학습환경 분석 페이지로 이동합니다.'); // 이 줄 삭제 또는 주석처리
-            window.location.href = '../html/page_chartpage_num01.html'; // 이 줄 추가
+            window.location.href = 'page_chartpage_num01.html';
             break;
         case 'development':
-            alert('발전도 분석 페이지로 이동합니다.');
-            // window.location.href = 'development-analysis.html';
+            window.location.href = 'page_prediction_num01.html';
             break;
-        case 'site-guide':
-            alert('사이트 이용 방법 페이지로 이동합니다.');
-            // window.location.href = 'site-guide.html';
+        case 'myservice':
+            window.location.href = 'page_userpage_num01.html';  // 현재 페이지
             break;
-        case 'usage-stats':
-            alert('이용 수치 가이드 페이지로 이동합니다.');
-            // window.location.href = 'usage-stats.html';
+        case 'mypage':
+            alert('마이 페이지로 이동합니다.');
             break;
-        case 'site-info':
-            alert('사이트 정보 페이지로 이동합니다.');
-            // window.location.href = 'site-info.html';
+        case 'main':
+            window.location.href = 'page_mainpage_num01.html';
             break;
-        default:
-            alert('페이지를 찾을 수 없습니다.');
     }
 }
 // 로그인 함수

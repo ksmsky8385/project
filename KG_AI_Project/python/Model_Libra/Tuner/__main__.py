@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from tunercontroller_Num01 import TunerController_Num01
 from tunercontroller_Num02 import TunerController_Num02
+from Tuner.extractor_Num01 import Num01Extractor
 
 def main():
     config_name = os.getenv("MODEL_CONFIG_NAME", "Num02_Config_XGB.json")
@@ -25,5 +26,13 @@ def main():
 
     controller.run()
 
+def extraction_num01():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    log_path = os.path.join(base_dir, "..", "_Logs", "Tuner_Logs", "Num01_Tuner_Log_20250721_213441.json")
+    extractor = Num01Extractor(log_path)
+    extractor.extract_top_n(n=5)
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    extraction_num01()

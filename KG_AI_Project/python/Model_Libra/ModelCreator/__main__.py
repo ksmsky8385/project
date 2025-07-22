@@ -4,7 +4,7 @@ import time
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 # 환경변수에서 config 파일명 가져오기
-config_name = os.getenv("MODEL_CONFIG_NAME", "Num01_Config_RFR.json")
+config_name = os.getenv("MODEL_CONFIG_NAME", "Num02_Config_XGB.json")
 config_path = os.path.join(os.path.dirname(__file__), "..", "_Configs", config_name)
 
 # 컨트롤러 분기 처리

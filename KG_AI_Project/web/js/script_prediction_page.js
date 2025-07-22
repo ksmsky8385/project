@@ -817,17 +817,15 @@ function createTrendPieChart(data) {
 
 // 이벤트 핸들러
 function navigateTo(page) {
-    console.log(`${page} 페이지로 이동`);
-    
     switch(page) {
         case 'learning':
             window.location.href = 'page_chartpage_num01.html';
             break;
-        case 'prediction':
-            location.reload();
+        case 'development':
+            window.location.href = 'page_prediction_num01.html';
             break;
         case 'myservice':
-            alert('마이 서비스 페이지로 이동합니다.');
+            window.location.href = 'page_userpage_num01.html';  // 현재 페이지
             break;
         case 'mypage':
             alert('마이 페이지로 이동합니다.');
@@ -835,8 +833,6 @@ function navigateTo(page) {
         case 'main':
             window.location.href = 'page_mainpage_num01.html';
             break;
-        default:
-            alert('페이지를 찾을 수 없습니다.');
     }
 }
 
