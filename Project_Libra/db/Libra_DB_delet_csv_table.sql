@@ -1,0 +1,29 @@
+SET SERVEROUTPUT ON;
+BEGIN -- 연도별 테이블 드랍
+  FOR yr IN 2014..2024 LOOP
+    BEGIN
+      EXECUTE IMMEDIATE 'DROP TABLE LIBRA.NUM08_' || yr || ' CASCADE CONSTRAINTS';
+      DBMS_OUTPUT.PUT_LINE('삭제 완료: NUM08_' || yr);
+    EXCEPTION
+      WHEN OTHERS THEN
+        IF SQLCODE = -942 THEN
+          DBMS_OUTPUT.PUT_LINE('존재하지 않음: NUM08_' || yr);
+        ELSE
+          DBMS_OUTPUT.PUT_LINE('삭제 실패: NUM08_' || yr || ' ➜ ' || SQLERRM);
+        END IF;
+    END;
+  END LOOP;
+END;
+/
+
+--BEGIN -- 단일명 테이블 드랍
+--  BEGIN
+--    EXECUTE IMMEDIATE 'DROP TABLE NUM08_FILTERED_COMMON CASCADE CONSTRAINTS';
+--  EXCEPTION
+--    WHEN OTHERS THEN
+--      IF SQLCODE != -942 THEN
+--        RAISE;
+--      END IF;
+--  END;
+--END;
+--/

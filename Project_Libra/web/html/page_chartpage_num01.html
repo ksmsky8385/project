@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libra - 환경점수예측 분석</title>
+    <link rel="stylesheet" href="../css/style_chartpage_num01.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* 로딩 스피너 스타일 추가 */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #42a5f5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .chart-loading {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        
+        .chart-placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+        }
+        
+        .placeholder-content {
+            text-align: center;
+            color: #666;
+        }
+        
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        /* 차트 컨테이너 스타일 */
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin-bottom: 20px;
+        }
+        
+        #mainChart {
+            max-height: 100%;
+        }
+        
+        /* 에러 메시지 스타일 */
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        /* 입력 필드 스타일 */
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #42a5f5;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo" onclick="navigateTo('main')" style="cursor: pointer;">
+                    <div class="logo-icon">
+                        <img src="../images/logo.jpeg" alt="Libra Logo" onerror="this.style.display='none'">
+                    </div>
+                    Libra
+                </div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item" onclick="navigateTo('learning')">환경점수예측 분석</a>
+                    <a href="#" class="nav-item" onclick="navigateTo('development')">학습환경 예측</a>
+                    <a href="#" class="nav-item" onclick="navigateTo('myservice')">마이 서비스</a>
+                </nav>
+                <button class="login-btn" onclick="navigateTo('mypage')" type="button">
+                    <span class="login-icon">👤</span>
+                    My Page
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="main-layout">
+                <!-- 왼쪽 컨트롤 패널 -->
+                <aside class="control-panel">
+                    <div class="panel-section">
+                        <h3>데이터 설정</h3>
+                        <div class="form-group">
+                            <label for="yearSelect">연도 선택</label>
+                            <select id="yearSelect" onchange="onYearChange()" aria-label="연도 선택">
+                                <!-- 동적으로 연도 옵션이 추가됨 -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3>필터 선택</h3>
+                        
+                        <div class="form-group">
+                            <label for="stypFilter">대학유형</label>
+                            <select id="stypFilter" onchange="onFilterChange()" aria-label="대학유형 필터">
+                                <option value="전체">전체</option>
+                                <option value="대학">대학</option>
+                                <option value="전문대학">전문대학</option>
+                                <option value="대학원대학">대학원대학</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fndFilter">설립</label>
+                            <select id="fndFilter" onchange="onFilterChange()" aria-label="설립 필터">
+                                <option value="전체">전체</option>
+                                <option value="국립">국립</option>
+                                <option value="공립">공립</option>
+                                <option value="사립">사립</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rgnFilter">지역</label>
+                            <select id="rgnFilter" onchange="onFilterChange()" aria-label="지역 필터">
+                                <option value="전체">전체</option>
+                                <option value="서울">서울</option>
+                                <option value="부산">부산</option>
+                                <option value="대구">대구</option>
+                                <option value="인천">인천</option>
+                                <option value="광주">광주</option>
+                                <option value="대전">대전</option>
+                                <option value="울산">울산</option>
+                                <option value="세종">세종</option>
+                                <option value="경기">경기</option>
+                                <option value="강원">강원</option>
+                                <option value="충북">충북</option>
+                                <option value="충남">충남</option>
+                                <option value="전북">전북</option>
+                                <option value="전남">전남</option>
+                                <option value="경북">경북</option>
+                                <option value="경남">경남</option>
+                                <option value="제주">제주</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="uscFilter">규모</label>
+                            <select id="uscFilter" onchange="onFilterChange()" aria-label="규모 필터">
+                                <option value="전체">전체</option>
+                                <option value="A그룹">A그룹</option>
+                                <option value="B그룹">B그룹</option>
+                                <option value="C그룹">C그룹</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="chartType">차트 타입</label>
+                            <select id="chartType" onchange="onChartTypeChange()" aria-label="차트 타입 선택">
+                                <option value="bar">막대 차트</option>
+                                <option value="line">선 차트</option>
+                                <option value="scatter">산점도</option>
+                                <option value="pie">원형 차트</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sortOrder">정렬 방식</label>
+                            <select id="sortOrder" onchange="onSortOrderChange()" aria-label="정렬 방식 선택">
+                                <option value="rank_desc">환경점수 높은 순 (기본)</option>
+                                <option value="rank_asc">환경점수 낮은 순</option>
+                                <option value="university">대학명 가나다순</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dataRange">데이터 범위</label>
+                            <select id="dataRange" onchange="onDataRangeChange()" aria-label="데이터 범위 선택">
+                                <option value="all">전체 데이터</option>
+                                <option value="top">상위 데이터</option>
+                                <option value="bottom">하위 데이터</option>
+                                <option value="range">사용자 지정 범위</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="topBottomCountGroup" style="display: none;">
+                            <label for="topBottomCount">표시할 데이터 개수</label>
+                            <input type="number" id="topBottomCount" min="1" max="100" value="10" onchange="onDataRangeChange()" aria-label="표시할 데이터 개수">
+                        </div>
+
+                        <div class="form-group" id="rangeGroup" style="display: none;">
+                            <label for="rangeStart">시작 순위</label>
+                            <input type="number" id="rangeStart" min="1" placeholder="예: 1" onchange="onDataRangeChange()" aria-label="시작 순위">
+                        </div>
+
+                        <div class="form-group" id="rangeGroupEnd" style="display: none;">
+                            <label for="rangeEnd">끝 순위</label>
+                            <input type="number" id="rangeEnd" min="1" placeholder="예: 50" onchange="onDataRangeChange()" aria-label="끝 순위">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="yAxisMode">Y축 범위 설정</label>
+                            <select id="yAxisMode" onchange="onYAxisModeChange()" aria-label="Y축 범위 모드 선택">
+                                <option value="enhanced">향상된 표시 (권장)</option>
+                                <option value="auto">자동 조절</option>
+                                <option value="dataRange">데이터 범위 기준</option>
+                                <option value="custom">사용자 지정</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="customRangeGroup" style="display: none;">
+                            <label for="yAxisMin">Y축 최소값</label>
+                            <input type="number" id="yAxisMin" step="0.1" placeholder="최소값" onchange="onCustomRangeChange()" aria-label="Y축 최소값">
+                        </div>
+
+                        <div class="form-group" id="customRangeGroupMax" style="display: none;">
+                            <label for="yAxisMax">Y축 최대값</label>
+                            <input type="number" id="yAxisMax" step="0.1" placeholder="최대값" onchange="onCustomRangeChange()" aria-label="Y축 최대값">
+                        </div>
+
+                        <button class="generate-btn" onclick="generateChart()" type="button" id="generateBtn">
+                            차트 생성
+                        </button>
+                    </div>
+
+                    <div class="panel-actions">
+                        <button class="action-btn primary" onclick="exportChart()" type="button" id="exportBtn">
+                            차트 내보내기
+                        </button>
+                        <button class="action-btn secondary" onclick="saveAnalysis()" type="button" id="saveBtn">
+                            즐겨찾기 저장
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- 오른쪽 차트 영역 -->
+                <section class="chart-area">
+                    <div class="chart-header">
+                        <div class="chart-tabs" role="tablist">
+                            <button class="chart-tab active" onclick="switchTab('table1')" type="button" role="tab" aria-selected="true" tabindex="0">
+                                환경점수예측 데이터
+                            </button>
+                            <button class="chart-tab" onclick="switchTab('table2')" type="button" role="tab" aria-selected="false" tabindex="-1">
+                                평균값 분석
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="mainChart" aria-label="환경점수 분석 차트"></canvas>
+                        <div class="chart-loading" id="chartLoading" style="display: none;" aria-hidden="true">
+                            <div class="loading-spinner"></div>
+                            <p>차트를 생성하고 있습니다...</p>
+                        </div>
+                        <div class="chart-placeholder" id="chartPlaceholder" aria-hidden="false">
+                            <div class="placeholder-content">
+                                <div class="placeholder-icon">📊</div>
+                                <h3>차트가 표시될 영역입니다</h3>
+                                <p>연도와 필터를 선택한 후 '차트 생성' 버튼을 클릭하세요.</p>
+                                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-info">
+                        <div class="info-card">
+                            <h4>현재 분석 정보</h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">연도:</span>
+                                    <span class="value" id="currentYear">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">대학유형:</span>
+                                    <span class="value" id="currentStyp">전체</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">설립:</span>
+                                    <span class="value" id="currentFnd">전체</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">지역:</span>
+                                    <span class="value" id="currentRgn">전체</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">규모:</span>
+                                    <span class="value" id="currentUsc">전체</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">차트 타입:</span>
+                                    <span class="value" id="currentChartType">막대 차트</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">정렬 방식:</span>
+                                    <span class="value" id="currentSortOrder">환경점수 높은 순</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">데이터 수:</span>
+                                    <span class="value" id="dataCount">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Y축 범위:</span>
+                                    <span class="value" id="currentYAxisMode">향상된 표시</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 에러 처리를 위한 스크립트 먼저 로드 -->
+    <script>
+        // 전역 에러 핸들러
+        window.addEventListener('error', function(event) {
+            console.error('전역 에러 발생:', event.error);
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '스크립트 로드 중 오류가 발생했습니다: ' + event.message;
+            }
+        });
+
+        // JavaScript 파일 로드 실패 시 처리
+        function handleScriptError() {
+            console.error('script_chartpage_num01.js 로드 실패');
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `
+                    <strong>스크립트 로드 실패</strong><br>
+                    script_chartpage_num01.js 파일을 찾을 수 없습니다.<br>
+                    파일 경로를 확인해주세요: ../js/script_chartpage_num01.js
+                `;
+            }
+        }
+
+        // DOM 로드 완료 후 스크립트 파일 확인
+        document.addEventListener('DOMContentLoaded', function() {
+            // generateChart 함수가 정의되었는지 확인
+            setTimeout(function() {
+                if (typeof generateChart === 'undefined') {
+                    console.error('generateChart 함수가 정의되지 않았습니다.');
+                    const errorDiv = document.getElementById('errorMessage');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerHTML = `
+                            <strong>함수 정의 오류</strong><br>
+                            JavaScript 파일이 올바르게 로드되지 않았습니다.<br>
+                            페이지를 새로고침하거나 파일 경로를 확인해주세요.
+                        `;
+                    }
+                    
+                    // 버튼 비활성화
+                    const generateBtn = document.getElementById('generateBtn');
+                    if (generateBtn) {
+                        generateBtn.disabled = true;
+                        generateBtn.textContent = '스크립트 로드 실패';
+                    }
+                }
+            }, 100);
+        });
+    </script>
+
+    <!-- 메인 스크립트 파일 로드 (파일명 변경됨) -->
+    <script src="../js/script_chartpage_num01.js" onerror="handleScriptError()"></script>
+</body>
+</html>
