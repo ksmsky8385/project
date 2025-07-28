@@ -1,3 +1,7 @@
-[submodule "Project_Libra"]
-	path = Project_Libra
-	url = https://github.com/Orbit-Libra/Project_Libra.git
+[submodule "Project_Libra/1st_Project_MachineLearning"]
+    path = Project_Libra/1st_Project_MachineLearning
+    url = https://github.com/Orbit-Libra/1st_Project_MachineLearning.git
+
+[submodule "Project_Libra/2nd_Project_MachineLearning"]
+    path = Project_Libra/2nd_Project_MachineLearning
+    url = https://github.com/Orbit-Libra/2nd_Project_MachineLearning.git
