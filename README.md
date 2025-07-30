@@ -15,9 +15,9 @@ project/
 
 ## (필독) 
 
-협업에 따른 조직 리포지토리로 전환 - 프로젝트 폴더 서브모듈화
+협업에 따른 조직 리포지토리로 전환 - Project_Libra 서브모듈화
 
-조직 깃 리포지토리
+조직 깃 - **Orbit-Libra**
 
 조직 깃 주소 : https://github.com/Orbit-Libra
 
